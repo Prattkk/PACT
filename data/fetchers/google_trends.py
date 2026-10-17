@@ -70,8 +70,8 @@ def search_interest(keyword: str, start: date, end: date) -> pd.Series:
     try:
         s = _fetch_one(keyword, start, end)
     except Exception as e:
+        # do not cache failures: a throttled call must be retried on the next run
         log.warning("gtrends fetch failed keyword=%s: %s", keyword, type(e).__name__)
-        cache_write(NAMESPACE, params, {"rows": []})
         return pd.Series(dtype=float)
 
     rows = [(d.isoformat(), float(v)) for d, v in s.items()]

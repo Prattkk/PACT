@@ -186,6 +186,11 @@ def fetch_panel(
         "gdelt fetch start=%s end=%s instruments=%s",
         start, end, list(instruments_tuple),
     )
+    backend = os.environ.get("PACT_GDELT_BACKEND") or ("bigquery" if os.environ.get("GCP_PROJECT_ID") else "files")
+    if backend == "files":
+        from data.fetchers.gdelt_files import fetch_panel_files
+
+        return fetch_panel_files(start, end, instruments_tuple)
     client = _client()
     sql = _build_query(start, end, instruments_tuple)
 

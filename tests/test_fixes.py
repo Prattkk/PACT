@@ -213,3 +213,18 @@ def test_claude_client_caches_and_replays(monkeypatch, tmp_path):
     assert r1.text == '{"direction": 1}' and not r1.cached and r2.cached
     assert len(calls) == 1 and calls[0]["temperature"] == 0.0 and "seed" not in calls[0]
     assert ClaudeClient(model="claude-opus-5-5", offline=True).model == "claude-opus-5-5"
+
+
+def test_gdelt_file_aggregation_matches_filters():
+    from data.fetchers.gdelt_files import aggregate_rows
+    filt = {"BTC": {"themes": ["TECH_CRYPTOCURRENCY"], "keywords": ["bitcoin"]},
+            "USO": {"themes": ["ECON_PETROLEUM"], "keywords": ["oil price"]}}
+    hdr = "DATE\tNUMARTS\tCOUNTS\tTHEMES\tLOCATIONS\tPERSONS\tORGANIZATIONS\tTONE\tCAMEOEVENTIDS\tSOURCES\tSOURCEURLS\n"
+    rows = [
+        "20230315\t3\t\tTECH_CRYPTOCURRENCY;X\t\t\t\t-2.0,1,3,4,5,6\t\ta.com\thttps://a.com/x\n",
+        "20230315\t1\t\tY\t\t\t\t4.0,1,1,1,1,1\t\tb.com\thttps://b.com/Bitcoin-rally\n",
+        "20230315\t5\t\tZ\t\t\t\t1.0,1,1,1,1,1\t\tc.com\thttps://c.com/other\n",
+    ]
+    out = aggregate_rows([hdr] + rows, filt)
+    assert out["n_BTC"] == 4 and abs(out["tone_BTC"] - (3 * -2.0 + 4.0) / 4) < 1e-12
+    assert out["n_USO"] == 0

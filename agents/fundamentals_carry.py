@@ -4,7 +4,7 @@ Per-instrument factor families:
 - Equity indices: aggregated P/E, FCF yield, revenue growth (EDGAR 10-K/Q)
 - Bonds: real yields, term premium, slope (ALFRED) — wired here
 - Gold: real-yield-vs-gold, USD context — wired here
-- Oil: EIA inventories + NOAA weather (HDD, hurricanes)
+- Oil: EIA inventories + NOAA CPC heating degree days
 - BTC: on-chain (active addresses, exchange flows, MVRV, hashrate)
 - QQQ: GitHub Archive aggregate engineering velocity
 - Earnings transcripts: per-quarter guidance/sentiment
@@ -48,6 +48,9 @@ EQUITY_INDICES = ("SPY", "QQQ", "IWM", "EEM")
 # selection). Re-enable only after those are fixed and validated.
 EQUITY_INDICES_AGGREGATABLE: tuple[str, ...] = ()
 EIA_RELEASE_LAG_DAYS = 6     # weekly period ends Friday; WPSR released the following Wed (Thu after holidays)
+# GitHub Archive needs BigQuery; off so results do not depend on whether a GCP
+# project happens to be configured. Paper: excluded.
+GITHUB_VELOCITY_ENABLED = False
 NOAA_RELEASE_LAG_DAYS = 10   # monthly GSOM value usable only after the month ends (+ publication lag)
 BONDS = ("IEF", "SHY")
 
@@ -106,7 +109,7 @@ class FundamentalsCarryAgent(BaseAgent):
                     # (Russell 2000 needs a 200+ name aggregate to be credible).
                     f.update({"agg_pe": 0.0, "fwd_earnings_yield": 0.0, "rev_growth_yoy": 0.0, "fcf_yield": 0.0})
                 f["transcript_guidance_score"] = 0.0  # not yet wired
-                if self.enable_altdata and sym == "QQQ":
+                if self.enable_altdata and sym == "QQQ" and GITHUB_VELOCITY_ENABLED:
                     f["github_eng_velocity_log_abnormal"] = self._qqq_eng_velocity_z(as_of)
             elif sym in BONDS:
                 # Real yield (10y or 2y minus CPI YoY %), nominal level, slope.
@@ -130,7 +133,8 @@ class FundamentalsCarryAgent(BaseAgent):
                 f["eia_inventory_z"] = self._uso_inventory_z(as_of)
                 if self.enable_altdata:
                     f["noaa_hdd_z"] = self._hdd_z(as_of)
-                    f["hurricane_active"] = self._hurricane_active(as_of)
+                    # hurricane_active removed: the fetcher only returns a Jun-Nov
+                    # calendar flag, not storm data, and the LLM would read it as news.
             elif sym == "BTC":
                 if self.enable_altdata:
                     f.update(self._btc_factors(as_of))
@@ -221,8 +225,8 @@ class FundamentalsCarryAgent(BaseAgent):
         """BTC on-chain factors derived from blockchain.info chart series.
 
         Returns active-addresses log-abnormal, hashrate log-abnormal,
-        transaction-volume z (proxy for exchange netflow), and an MVRV
-        proxy (price/200d MA). All standardized over a trailing window
+        transaction-count z, and price relative to its 200-day mean
+        (factor "price_to_200d_mean"; not true MVRV). All standardized over a trailing window
         relative to `as_of` for point-in-time hygiene.
         """
         if self._btc_panel is None:
@@ -236,14 +240,15 @@ class FundamentalsCarryAgent(BaseAgent):
 
         f = {
             "active_addresses_log_abnormal": 0.0,
-            "exchange_netflow_z": 0.0,
-            "mvrv": 0.0,
+            "transactions_z": 0.0,
+            "price_to_200d_mean": 0.0,
             "hashrate_log_abnormal": 0.0,
         }
         if self._btc_panel is None or self._btc_panel.empty:
             return f
         as_of_ts = pd.Timestamp(as_of)
-        pit = self._btc_panel.loc[self._btc_panel.index <= as_of_ts]
+        # a UTC day's value is complete only after US close: use days < as_of
+        pit = self._btc_panel.loc[self._btc_panel.index < as_of_ts]
         if len(pit) < 90:
             return f
 
@@ -260,11 +265,11 @@ class FundamentalsCarryAgent(BaseAgent):
         if "transactions" in pit.columns:
             tx = pit["transactions"].tail(90)
             mu, sd = float(tx.mean()), float(tx.std())
-            f["exchange_netflow_z"] = (float(tx.iloc[-1]) - mu) / sd if sd > 0 else 0.0
+            f["transactions_z"] = (float(tx.iloc[-1]) - mu) / sd if sd > 0 else 0.0
         if "market_price_usd" in pit.columns:
             mvrv = btc_mvrv_proxy(pit["market_price_usd"], window=200)
             if not mvrv.empty and pd.notna(mvrv.iloc[-1]):
-                f["mvrv"] = float(mvrv.iloc[-1])
+                f["price_to_200d_mean"] = float(mvrv.iloc[-1])
         return f
 
     def _qqq_eng_velocity_z(self, as_of: date) -> float:

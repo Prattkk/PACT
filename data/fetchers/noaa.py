@@ -50,6 +50,8 @@ def heating_degree_days_us(start: date, end: date) -> pd.Series:
     Returns Series indexed by date with HDD values, or empty if NOAA_TOKEN
     is missing.
     """
+    if os.environ.get("PACT_NOAA_SOURCE", "cpc").lower() == "cpc":
+        return cpc_conus_hdd_monthly(start, end)
     params = {"start": start.isoformat(), "end": end.isoformat(), "metric": "hdd"}
     cached = cache_read(NAMESPACE, params)
     if cached is not None:
@@ -88,6 +90,40 @@ def heating_degree_days_us(start: date, end: date) -> pd.Series:
 
     cache_write(NAMESPACE, params, {"rows": rows})
     log.info("noaa fetched hdd rows=%d", len(rows))
+    return _series_from_payload({"rows": rows})
+
+
+CPC_URL = "https://ftp.cpc.ncep.noaa.gov/htdocs/degree_days/weighted/daily_data/{y}/Population.Heating.txt"
+
+
+def cpc_conus_hdd_monthly(start: date, end: date) -> pd.Series:
+    """Monthly population-weighted CONUS heating degree days from NOAA CPC.
+
+    Source: CPC daily degree-day files (no token). Daily CONUS values are
+    summed within each calendar month; the series is dated at month start,
+    matching the GSOM convention the agent's publication-lag rule expects.
+    """
+    params = {"start": start.isoformat(), "end": end.isoformat(), "metric": "cpc_conus_hdd_monthly"}
+    cached = cache_read(NAMESPACE, params)
+    if cached is not None:
+        return _series_from_payload(cached["payload"])
+    daily: dict[pd.Timestamp, float] = {}
+    for y in range(start.year, end.year + 1):
+        r = requests.get(CPC_URL.format(y=y), timeout=60)
+        r.raise_for_status()
+        lines = [ln for ln in r.text.splitlines() if "|" in ln]
+        header = next(ln for ln in lines if ln.startswith("Region|")).split("|")[1:]
+        conus = next(ln for ln in lines if ln.startswith("CONUS|")).split("|")[1:]
+        for d, v in zip(header, conus):
+            if d.strip() and v.strip():
+                daily[pd.Timestamp(d.strip())] = float(v)
+    s = pd.Series(daily).sort_index()
+    s = s.loc[(s.index >= pd.Timestamp(start)) & (s.index <= pd.Timestamp(end))]
+    monthly = s.groupby(s.index.to_period("M")).agg(["sum", "count"])
+    monthly = monthly[monthly["count"] >= 28]  # complete months only
+    rows = [(p.to_timestamp().date().isoformat(), float(v)) for p, v in monthly["sum"].items()]
+    cache_write(NAMESPACE, params, {"rows": rows})
+    log.info("noaa cpc hdd months=%d", len(rows))
     return _series_from_payload({"rows": rows})
 
 

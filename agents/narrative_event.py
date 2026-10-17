@@ -1,6 +1,6 @@
 """Narrative/Event Agent (spec §4.1).
 
-Primary inputs: GDELT GKG (real, via BigQuery), EDGAR 8-Ks (stubbed).
+Primary inputs: GDELT GKG (BigQuery, or the free daily files when no GCP project is set).
 Secondary inputs: Wikipedia, Google Trends, Polymarket — gated by
 `enable_secondary` flag, stubbed at zero until per-source fetchers exist.
 
@@ -29,17 +29,14 @@ from pact_logging import get_logger
 
 log = get_logger(__name__)
 
+# Only factors that are actually computed are sent to the LLM. The original
+# list also had geo concentration, novelty, EDGAR 8-K, earnings-surprise and
+# guidance fields that were never wired (always 0.0, which an LLM would read
+# as "no filings / no news"), and a theme-intensity field identical to volume.
 PRIMARY_FACTORS: tuple[str, ...] = (
     "gdelt_event_volume_log",
     "gdelt_tone",
     "gdelt_tone_surprise_wow",
-    "gdelt_theme_intensity",
-    "gdelt_geo_concentration",
-    "gdelt_event_novelty",
-    "edgar_8k_volume",
-    "edgar_8k_item_dist_entropy",
-    "earnings_surprise_sentiment",
-    "guidance_change",
 )
 
 SECONDARY_FACTORS: tuple[str, ...] = (
@@ -53,7 +50,7 @@ SECONDARY_FACTORS: tuple[str, ...] = (
 
 SYSTEM_PROMPT = (
     "You are the Narrative/Event Agent. Inputs are per-instrument factor "
-    "blobs from GDELT, EDGAR, and (optionally) alt-data sources. Map them "
+    "blobs from GDELT news and (optionally) attention data. Map them "
     "into per-instrument views over a 1-week horizon. If all factors for an "
     "instrument are zero or missing, emit direction=0, conviction=0. Never "
     "invent factors. Output strict JSON: a list of "
@@ -145,7 +142,9 @@ class NarrativeEventAgent(BaseAgent):
                 n_col = f"n_{sym}"
                 tone_col = f"tone_{sym}"
                 if n_col in panel.columns:
-                    pit = panel.loc[panel.index <= as_of_ts]
+                    # a UTC day's GDELT file is complete only after the day ends
+                    # (published the next morning): use days < as_of
+                    pit = panel.loc[panel.index < as_of_ts]
                     if len(pit) >= 7:
                         recent_7d = pit.tail(7)
                         n_recent = float(recent_7d[n_col].sum())
@@ -158,7 +157,6 @@ class NarrativeEventAgent(BaseAgent):
                             prior_std = float(prior[tone_col].std()) if tone_col in prior.columns else 0.0
                             if prior_std > 0:
                                 f["gdelt_tone_surprise_wow"] = (tone_recent - prior_tone) / prior_std
-                        f["gdelt_theme_intensity"] = float(np.log1p(n_recent))
 
             # Wikipedia secondary
             if wiki and "wiki_abnormal_attention" in self.enabled_secondary:

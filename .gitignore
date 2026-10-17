@@ -54,3 +54,4 @@ results/altdata_run_*.csv
 # Paper drafts and project spec (kept locally, not in git)
 paper/
 multi_agent_trading_paper_spec.md
+data/cache/gdelt_days/

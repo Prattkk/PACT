@@ -16,7 +16,7 @@ variants:
       - gtrends_abnormal_level
       - gtrends_momentum
   - id: plus_instrument
-    name: "+ Instrument-specific (GitHub QQQ, on-chain BTC, NOAA oil)"
+    name: "+ Instrument-specific (on-chain BTC, NOAA CPC heating degree days for oil)"
     enable_altdata_in_fundamentals: true
   - id: full
     name: "Attention + instrument-specific"
