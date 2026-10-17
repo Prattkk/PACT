@@ -122,9 +122,16 @@ def build_llm_client(regime: str, offline: bool = False, cutoff_year: int | None
             return ChronoGPTClient(offline=offline)
         return ChronoGPTClient(cutoff_year=cutoff_year, offline=offline)
     if regime == "frontier":
-        from llm.gpt4o_client import GPT4oClient
+        # Default frontier model is Claude; set PACT_FRONTIER=gpt4o for the old GPT-4o path.
+        import os
 
-        return GPT4oClient(offline=offline)
+        if os.environ.get("PACT_FRONTIER", "claude").lower() == "gpt4o":
+            from llm.gpt4o_client import GPT4oClient
+
+            return GPT4oClient(offline=offline)
+        from llm.claude_client import ClaudeClient
+
+        return ClaudeClient(offline=offline)
     raise ValueError(f"unknown regime: {regime}")
 
 

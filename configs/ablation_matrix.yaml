@@ -13,9 +13,9 @@ llm_regimes:
     revisions_module: llm.chronogpt_revisions
     note: "contamination-clean path; per-year checkpoint with pinned sha"
   - name: frontier
-    primary: gpt4o
-    model: gpt-4o-2024-11-20
-    note: "post-cutoff sample only; verify cutoff at submission"
+    primary: claude
+    model: claude-opus-5-5
+    note: "training data cover the whole 2022-2024 window; treat LLM cells as potentially contaminated"
 
 protocols:
   - id: "1"

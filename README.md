@@ -2,7 +2,7 @@
 
 A coordination-and-attribution harness for multi-agent LLM trading systems.
 It holds the specialist agents, data and portfolio construction fixed and
-varies only the coordination protocol, under GPT-4o and no-LLM regimes,
+varies only the coordination protocol, under Claude (frontier) and no-LLM regimes,
 against a deterministic baseline and passive benchmarks.
 
 The contribution name comes from the headline ablation: 7 coordination
@@ -43,7 +43,7 @@ deterministic baseline (prices only, no API keys).
 ```
 agents/                7 trading agents (per spec §4) + NullAgent for LOO
 coordination/          7 coordination protocols (spec §6.2)
-llm/                   GPT-4o + ChronoGPT clients (cached, prompt-hash keyed)
+llm/                   Claude (default frontier), GPT-4o + ChronoGPT clients (cached, prompt-hash keyed)
                        chronogpt_revisions.py pins HF SHAs for 1999-2024
 data/fetchers/         prices, ALFRED, EDGAR, EDGAR XBRL aggregator,
                        GDELT (BigQuery), EIA, NOAA, Wikipedia, Polymarket,
@@ -75,7 +75,8 @@ Required environment (`.env` at repo root, gitignored):
 
 | Variable | Required for | How to get |
 |---|---|---|
-| `OPENAI_API_KEY` | frontier LLM regime | https://platform.openai.com/api-keys |
+| `ANTHROPIC_API_KEY` | frontier LLM regime (Claude, default) | https://console.anthropic.com/settings/keys |
+| `OPENAI_API_KEY` | only if `PACT_FRONTIER=gpt4o` | https://platform.openai.com/api-keys |
 | `FRED_API_KEY` | ALFRED macro series | https://fred.stlouisfed.org/docs/api/api_key.html |
 | `SEC_USER_AGENT` | EDGAR filings + XBRL | string like `"Name email@x.com"` |
 | `GCP_PROJECT_ID` + `GOOGLE_APPLICATION_CREDENTIALS` | GDELT + GitHub Archive (BigQuery) | GCP service account JSON |
@@ -120,9 +121,10 @@ pytest -q
 
 - All LLM responses cached as JSON keyed by SHA-256 of the canonicalized
   prompt (`llm/base.py::canonicalize_prompt`).
-- Frontier model ID is pinned (`gpt-4o-2024-11-20`); the OpenAI client uses
-  `temperature=0`, `seed=42`, and the response's `system_fingerprint` is
-  recorded in every cache entry.
+- Frontier model is pinned to `claude-opus-5-5` (override with `PACT_CLAUDE_MODEL`);
+  `temperature=0` (the Messages API has no seed), and the API's returned model ID,
+  message ID and token usage are recorded in every cache entry. The old GPT-4o path
+  (`gpt-4o-2024-11-20`, seed 42) is still available with `PACT_FRONTIER=gpt4o`.
 - ChronoGPT yearly checkpoints (`manelalab/chrono-gpt-instruct-v1-YYYY1231`)
   are pinned by HF commit SHA in `llm/chronogpt_revisions.py` for every year
   1999-2024. Use `ChronoGPTClient.for_decision_year(Y)` to load the

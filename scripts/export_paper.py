@@ -253,10 +253,10 @@ def main() -> None:
     best_llm = max(llm_cells, key=lambda p: llm_cells[p]["sr"]) if llm_cells else None
     if best_llm:
         s = llm_cells[best_llm]
-        brow.append(f"Best GPT-4o cell ({SHORT[best_llm]}) & {num(s['sr'])} & {num(s['sortino'])} & "
+        brow.append(f"Best Claude cell ({SHORT[best_llm]}) & {num(s['sr'])} & {num(s['sortino'])} & "
                     f"{pct(s['mdd'])} & {pct(s['ann_ret'])} \\\\")
     else:
-        brow.append(f"Best GPT-4o cell & {PENDING} & {PENDING} & {PENDING} & {PENDING} \\\\")
+        brow.append(f"Best Claude cell & {PENDING} & {PENDING} & {PENDING} & {PENDING} \\\\")
     (out / "tab_bench.tex").write_text("\n".join(brow) + "\n")
     N.set("best.llm.name", SHORT[best_llm] if best_llm else PENDING, best_llm)
     N.set("best.llm.sr", num(llm_cells[best_llm]["sr"]) if best_llm else PENDING)
@@ -290,20 +290,20 @@ def main() -> None:
 
     tests = []
     for p in COORDINATED:
-        tests.append((f"H1: {SHORT[p]} vs ensemble (GPT-4o)", ("frontier", p), ("frontier", "independent_ensemble")))
-    tests.append(("Monolith vs ensemble (GPT-4o)", ("frontier", "single_agent"), ("frontier", "independent_ensemble")))
+        tests.append((f"H1: {SHORT[p]} vs ensemble (Claude)", ("frontier", p), ("frontier", "independent_ensemble")))
+    tests.append(("Monolith vs ensemble (Claude)", ("frontier", "single_agent"), ("frontier", "independent_ensemble")))
     for bk, bl in (("spy_bh", "SPY buy-and-hold"), ("equal_weight", "equal weight"),
                    ("sixty_forty", "60/40"), ("inverse_vol", "inverse volatility")):
         tests.append((f"Deterministic vs {bl}", ("none", "deterministic_only"), bk))
     if best_llm:
-        tests.append((f"Best GPT-4o ({SHORT[best_llm]}) vs deterministic", ("frontier", best_llm), ("none", "deterministic_only")))
-        tests.append((f"Best GPT-4o ({SHORT[best_llm]}) vs {BENCHMARK_LABELS[best_bench].split(' (')[0].lower()}",
+        tests.append((f"Best Claude ({SHORT[best_llm]}) vs deterministic", ("frontier", best_llm), ("none", "deterministic_only")))
+        tests.append((f"Best Claude ({SHORT[best_llm]}) vs {BENCHMARK_LABELS[best_bench].split(' (')[0].lower()}",
                       ("frontier", best_llm), best_bench))
     else:
-        tests.append(("Best GPT-4o vs deterministic", None, None))
-        tests.append(("Best GPT-4o vs best benchmark", None, None))
+        tests.append(("Best Claude vs deterministic", None, None))
+        tests.append(("Best Claude vs best benchmark", None, None))
     for p in ("independent_ensemble", "sequential_pipeline", "hierarchical", "debate"):
-        tests.append((f"GPT-4o vs no LLM: {SHORT[p]}", ("frontier", p), ("none", p)))
+        tests.append((f"Claude vs no LLM: {SHORT[p]}", ("frontier", p), ("none", p)))
 
     results = []
     for label, a, b in tests:
@@ -549,7 +549,7 @@ def _plot_cost(path: Path, tc_table: dict, bench_tc: dict) -> None:
             ax.plot(x, [d[t] for t in x], color="black", lw=1.6, marker="o", ms=2.5, label="Deterministic")
             continue
         ls = "-" if reg == "frontier" else ":"
-        lab = f"{SHORT[p]} ({'GPT-4o' if reg == 'frontier' else 'no LLM'})"
+        lab = f"{SHORT[p]} ({'Claude' if reg == 'frontier' else 'no LLM'})"
         ax.plot(x, [d[t] for t in x], ls=ls, color=palette.get(p, "grey"), lw=1.0, marker="o", ms=2,
                 label=lab if reg == "frontier" else None)
     for k, col in (("spy_bh", "#555555"), ("equal_weight", "#999999")):

@@ -187,3 +187,29 @@ def test_alfred_rejects_implausible_release_dates():
     bad = pd.Series(pd.Timestamp("2026-10-01"), index=idx)    # today's vintage, not first release
     assert A._release_dates_plausible("CPIAUCSL", good)
     assert not A._release_dates_plausible("CPIAUCSL", bad)
+
+
+def test_claude_client_caches_and_replays(monkeypatch, tmp_path):
+    import llm.base as B
+    from llm.claude_client import ClaudeClient
+
+    monkeypatch.setattr(B, "LLM_CACHE_ROOT", tmp_path)
+    calls = []
+
+    class Msg:
+        content = [type("T", (), {"type": "text", "text": '{"direction": 1}'})()]
+        model, id, stop_reason = "claude-opus-5-5", "msg_1", "end_turn"
+        usage = None
+
+    class FakeMessages:
+        def create(self, **kw):
+            calls.append(kw)
+            return Msg()
+
+    c = ClaudeClient(model="claude-opus-5-5", api_key="test")
+    c._client = type("C", (), {"messages": FakeMessages()})()
+    r1 = c.complete(system="s", user="u", max_tokens=50)
+    r2 = c.complete(system="s", user="u", max_tokens=50)
+    assert r1.text == '{"direction": 1}' and not r1.cached and r2.cached
+    assert len(calls) == 1 and calls[0]["temperature"] == 0.0 and "seed" not in calls[0]
+    assert ClaudeClient(model="claude-opus-5-5", offline=True).model == "claude-opus-5-5"

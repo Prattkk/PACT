@@ -29,6 +29,7 @@ dependencies = [
     "google-cloud-bigquery>=3.20",
     "db-dtypes>=1.0",
     "pytrends>=4.9",
+    "anthropic>=0.40",
     "openai>=1.40",
     "transformers>=4.44",
     "torch>=2.3",

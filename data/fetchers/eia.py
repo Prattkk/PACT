@@ -37,7 +37,7 @@ def _api_key() -> str:
 
 @retry(stop=stop_after_attempt(4), wait=wait_exponential(min=1, max=10))
 def _get(url: str, params: dict) -> dict:
-    r = requests.get(url, params=params, timeout=30)
+    r = requests.get(url, params=params, timeout=120)  # EIA v2 responses can take ~60s
     r.raise_for_status()
     return r.json()
 
