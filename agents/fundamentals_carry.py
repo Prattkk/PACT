@@ -103,12 +103,8 @@ class FundamentalsCarryAgent(BaseAgent):
                         f["fcf_yield"] = float(agg.get("fcf_yield", 0.0))
                     except Exception as e:
                         log.warning("edgar aggregate failed sym=%s: %s", sym, type(e).__name__)
-                        f.update({"agg_pe": 0.0, "fwd_earnings_yield": 0.0, "rev_growth_yoy": 0.0, "fcf_yield": 0.0})
-                else:
-                    # IWM: equity-fundamentals branch deliberately zeroed
-                    # (Russell 2000 needs a 200+ name aggregate to be credible).
-                    f.update({"agg_pe": 0.0, "fwd_earnings_yield": 0.0, "rev_growth_yoy": 0.0, "fcf_yield": 0.0})
-                f["transcript_guidance_score"] = 0.0  # not yet wired
+                # Disabled / unwired equity fields are omitted rather than sent as
+                # 0.0, which an LLM would read as real zero valuations.
                 if self.enable_altdata and sym == "QQQ" and GITHUB_VELOCITY_ENABLED:
                     f["github_eng_velocity_log_abnormal"] = self._qqq_eng_velocity_z(as_of)
             elif sym in BONDS:

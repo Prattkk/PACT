@@ -211,7 +211,7 @@ def test_claude_client_caches_and_replays(monkeypatch, tmp_path):
     r1 = c.complete(system="s", user="u", max_tokens=50)
     r2 = c.complete(system="s", user="u", max_tokens=50)
     assert r1.text == '{"direction": 1}' and not r1.cached and r2.cached
-    assert len(calls) == 1 and calls[0]["temperature"] == 0.0 and "seed" not in calls[0]
+    assert len(calls) == 1 and "temperature" not in calls[0] and calls[0]["thinking"] == {"type": "adaptive"} and calls[0]["output_config"] == {"effort": "low"}
     assert ClaudeClient(model="claude-opus-5-5", offline=True).model == "claude-opus-5-5"
 
 
