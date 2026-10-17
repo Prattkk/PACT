@@ -40,5 +40,13 @@
     "mdd": -0.20261215306519265,
     "ann_return": 0.07437839920791167,
     "rows": 753
+  },
+  {
+    "label": "prefix_code",
+    "sharpe": -0.2641,
+    "mdd": -0.284,
+    "ann_return": null,
+    "rows": 984,
+    "note": "commit cb8e79f (pre-fix engine), pandas 2.2.3, same price snapshot; all pitfalls plus same-close execution and no position drift"
   }
 ]

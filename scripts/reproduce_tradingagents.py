@@ -116,7 +116,7 @@ def deterministic_protocol(stocks: tuple[str, ...], start: date, end: date) -> d
     cfg = BacktestConfig(start=start, end=end, portfolio=PortfolioConfig())
     result = run_backtest(proto, universe, cfg)
     eq = result.equity
-    rets = result.returns
+    rets = result.excess_returns
     return {
         "n_obs": int(len(rets)),
         "sharpe": sharpe(rets),

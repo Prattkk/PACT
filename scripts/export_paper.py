@@ -70,13 +70,13 @@ SHORT = {"single_agent": "monolith", "independent_ensemble": "ensemble",
          "llm_plus_anchor": "LLM+anchor", "deterministic_only": "deterministic"}
 AGENTS = ("macro_regime", "narrative_event", "cross_asset_transmission", "technical_trend",
           "fundamentals_carry", "risk_correlation")
-AGENT_LABEL = {"macro_regime": "Macro regime", "narrative_event": "Narrative/event",
-               "cross_asset_transmission": "Cross-asset transmission", "technical_trend": "Technical trend",
-               "fundamentals_carry": "Fundamentals/carry", "risk_correlation": "Risk/correlation"}
+AGENT_LABEL = {"macro_regime": "Macro regime", "narrative_event": "Narrative",
+               "cross_asset_transmission": "Cross-asset", "technical_trend": "Technical trend",
+               "fundamentals_carry": "Fundamentals", "risk_correlation": "Risk"}
 ALT_VARIANTS = ("text_only", "plus_attention", "plus_event_probs", "plus_instrument", "full")
-ALT_LABEL = {"text_only": "Text only (reference)", "plus_attention": "+ Attention (Wikipedia, Trends)",
-             "plus_event_probs": "+ Event probabilities (Polymarket)",
-             "plus_instrument": "+ Instrument-specific", "full": "Full stack"}
+ALT_LABEL = {"text_only": "Text only (level)", "plus_attention": "+ Attention",
+             "plus_event_probs": "+ Event probabilities", "plus_instrument": "+ Instrument-specific",
+             "full": "Full stack"}
 TC_GRID = (0, 5, 10, 30, 50, 100)
 PENDING = r"\pending"
 
@@ -105,6 +105,12 @@ def plain(x, d=2) -> str:
     if x is None or (isinstance(x, float) and math.isnan(x)):
         return PENDING
     return f"{x:.{d}f}"
+
+
+def interval(lo, hi, d=2) -> str:
+    if any(v is None or (isinstance(v, float) and math.isnan(v)) for v in (lo, hi)):
+        return PENDING
+    return f"$[{lo:.{d}f},\\,{hi:.{d}f}]$"
 
 
 class Numbers:
@@ -226,8 +232,7 @@ def main() -> None:
         none_cell = "n/a" if p == "single_agent" else (
             r"\textit{=det.}" if p == "llm_plus_anchor" else num(a.get("sr")))
         delta = (b.get("sr", float("nan")) - a.get("sr", float("nan"))) if p != "single_agent" else float("nan")
-        ci = (f"[{plain(b.get('ci_lo'))}, {plain(b.get('ci_hi'))}]"
-              if b and not math.isnan(b.get("ci_lo", float("nan"))) else PENDING)
+        ci = interval(b.get("ci_lo", float("nan")), b.get("ci_hi", float("nan"))) if b else PENDING
         rows.append(
             f"{LABEL[p]} & {none_cell} & {num(b.get('sr'))} {{\\scriptsize {ci}}} & "
             f"{'n/a' if p == 'single_agent' else num(delta)} & {plain(b.get('turnover'), 1)} & {pct(b.get('mdd'))} \\\\"
@@ -284,8 +289,9 @@ def main() -> None:
     for p in COORDINATED:
         tests.append((f"H1: {SHORT[p]} vs ensemble (GPT-4o)", ("frontier", p), ("frontier", "independent_ensemble")))
     tests.append(("Monolith vs ensemble (GPT-4o)", ("frontier", "single_agent"), ("frontier", "independent_ensemble")))
-    tests.append(("Deterministic vs SPY buy-and-hold", ("none", "deterministic_only"), "spy_bh"))
-    tests.append(("Deterministic vs equal weight", ("none", "deterministic_only"), "equal_weight"))
+    for bk, bl in (("spy_bh", "SPY buy-and-hold"), ("equal_weight", "equal weight"),
+                   ("sixty_forty", "60/40"), ("inverse_vol", "inverse volatility")):
+        tests.append((f"Deterministic vs {bl}", ("none", "deterministic_only"), bk))
     if best_llm:
         tests.append((f"Best GPT-4o ({SHORT[best_llm]}) vs deterministic", ("frontier", best_llm), ("none", "deterministic_only")))
         tests.append((f"Best GPT-4o ({SHORT[best_llm]}) vs {BENCHMARK_LABELS[best_bench].split(' (')[0].lower()}",
@@ -317,7 +323,7 @@ def main() -> None:
             trow.append(f"{r['label']} & {PENDING} & {PENDING} & {PENDING} & {PENDING} \\\\")
             continue
         trow.append(f"{r['label']} & {num(r['sr_diff'])} & {num(r['z'])} & {pval(r.get('q', float('nan')))} & "
-                    f"[{plain(r['bs_lo'])}, {plain(r['bs_hi'])}] \\\\")
+                    f"{interval(r['bs_lo'], r['bs_hi'])} \\\\")
     (out / "tab_tests.tex").write_text("\n".join(trow) + "\n")
     N.set("tests.n", str(len(results)), len(results))
     N.set("tests.nsig", str(sum(1 for r in avail if r.get("q", 1) < 0.05)) if len(avail) == len(results) else PENDING)
@@ -330,10 +336,9 @@ def main() -> None:
         verdict = "supported" if n_sig_better >= 1 and n_sig_worse == 0 else (
             "contradicted" if n_sig_worse >= 1 and n_sig_better == 0 else
             "mixed" if n_sig_better >= 1 else "not supported")
-        words = ["none", "one", "two", "three", "all four"]
-        N.set("hone.nbetter", words[n_better], n_better)
-        N.set("hone.nsigbetter", words[n_sig_better], n_sig_better)
-        N.set("hone.nsigworse", words[n_sig_worse], n_sig_worse)
+        N.set("hone.nbetter", str(n_better), n_better)
+        N.set("hone.nsigbetter", str(n_sig_better), n_sig_better)
+        N.set("hone.nsigworse", str(n_sig_worse), n_sig_worse)
         N.set("hone.verdict", verdict, verdict)
     else:
         for k in ("hone.nbetter", "hone.nsigbetter", "hone.nsigworse", "hone.verdict"):
@@ -364,7 +369,16 @@ def main() -> None:
         else:
             N.set(tag, f"{v:.0f}", v)
     fr = [cbs_rows.get(("frontier", p), float("nan")) for p in COORDINATED]
-    N.set("cbs.frontier.max", f"{max(fr):.0f}" if fr and not any(math.isnan(x) for x in fr) else PENDING)
+    have_fr = all(("frontier", p) in cells for p in COORDINATED + ("independent_ensemble",))
+    if have_fr:
+        vals = [400.0 if math.isnan(x) else x for x in fr]
+        N.set("cbs.frontier.max", f"{max(vals):.0f}", max(vals))
+        n50 = sum(1 for v in vals if v > 50)
+        N.set("htwo.n", str(n50), n50)
+        N.set("htwo.verdict", "supported" if n50 >= 1 else "not supported")
+    else:
+        for k in ("cbs.frontier.max", "htwo.n", "htwo.verdict"):
+            N.set(k, PENDING)
 
     # ---------------- cost sensitivity figure + per-cell numbers
     tc_table = {}
@@ -407,11 +421,13 @@ def main() -> None:
         N.set("loo.mostpos", AGENT_LABEL.get(d.idxmax(), d.idxmax()).lower(), d.idxmax())
         N.set("loo.mostposval", num(float(d.max())), float(d.max()))
         N.set("loo.nlarge", str(int((d.abs() >= 0.10).sum())), int((d.abs() >= 0.10).sum()))
+        N.set("hfour.verdict", "supported" if (d.abs() >= 0.10).any() else "not supported")
     else:
         missing.append(f"{loo_path} for {args.loo_cell} (v2)")
         for a in AGENTS:
             lrow.append(f"{AGENT_LABEL[a]} & {PENDING} & {PENDING} \\\\")
-        for k in ("loo.full", "loo.mostneg", "loo.mostnegval", "loo.mostpos", "loo.mostposval", "loo.nlarge"):
+        for k in ("loo.full", "loo.mostneg", "loo.mostnegval", "loo.mostpos", "loo.mostposval", "loo.nlarge",
+                  "hfour.verdict"):
             N.set(k, PENDING)
     (out / "tab_loo.tex").write_text("\n".join(lrow) + "\n")
 
@@ -437,8 +453,18 @@ def main() -> None:
                 N.set(f"alt.{p.replace('_', '')}.{v.replace('_', '')}", num(dlt), dlt)
         arow.append(f"{ALT_LABEL[v]} & " + " & ".join(cols) + " \\\\")
     (out / "tab_altdata.tex").write_text("\n".join(arow) + "\n")
+    ev = [alt.get((p, "plus_event_probs"), float("nan")) - alt.get((p, "text_only"), float("nan"))
+          for p in ("sequential_pipeline", "debate")]
+    if not any(math.isnan(x) for x in ev):
+        n_ok = sum(1 for x in ev if x >= 0.05)
+        N.set("hthree.verdict", "supported" if n_ok == 2 else ("partly supported" if n_ok == 1 else "not supported"))
+    else:
+        N.set("hthree.verdict", PENDING)
     if best_alt[0]:
-        N.set("alt.best", ALT_LABEL[best_alt[0][1]].lstrip("+ ").lower(), best_alt[0][1])
+        N.set("alt.best", {"plus_attention": "attention features (Wikipedia, Google Trends)",
+                           "plus_event_probs": "attention plus event probabilities (Polymarket)",
+                           "plus_instrument": "instrument-specific data", "full": "the full stack"}[best_alt[0][1]],
+              best_alt[0][1])
         N.set("alt.bestval", num(best_alt[1]), best_alt[1])
     else:
         N.set("alt.best", PENDING)
@@ -456,6 +482,15 @@ def main() -> None:
                 N.set(f"audit.{r['label'].replace('_', '')}.delta", num(r["sharpe"] - fixed["sharpe"]),
                       r["sharpe"] - fixed["sharpe"])
             arows.append(r)
+        harmful = [abs(r["sharpe"] - fixed["sharpe"]) for r in audit
+                   if r["label"] in ("level_splice", "union_calendar", "double_cost", "no_warmup")]
+        if harmful:
+            N.set("audit.rangelo", plain(min(harmful)), min(harmful))
+            N.set("audit.rangehi", plain(max(harmful)), max(harmful))
+        rfz = next((r for r in audit if r["label"] == "rf_zero"), None)
+        if rfz:
+            N.set("audit.rfzero.absdelta", plain(abs(rfz["sharpe"] - fixed["sharpe"])),
+                  abs(rfz["sharpe"] - fixed["sharpe"]))
     else:
         missing.append(str(audit_path))
     (out / "audit.json").write_text(json.dumps(arows, indent=2))
@@ -493,7 +528,7 @@ def _plot_cost(path: Path, tc_table: dict, bench_tc: dict) -> None:
 
     plt.rcParams.update({"font.size": 7.5, "font.family": "serif", "axes.spines.top": False,
                          "axes.spines.right": False})
-    fig, ax = plt.subplots(figsize=(4.7, 2.35))
+    fig, ax = plt.subplots(figsize=(4.7, 2.75))
     x = list(TC_GRID)
     palette = {"independent_ensemble": "#1b6ca8", "sequential_pipeline": "#c0392b", "hierarchical": "#e67e22",
                "debate": "#8e44ad", "llm_plus_anchor": "#16a085", "single_agent": "#7f8c8d"}
@@ -512,7 +547,7 @@ def _plot_cost(path: Path, tc_table: dict, bench_tc: dict) -> None:
     ax.axhline(0, color="#bbbbbb", lw=0.6)
     ax.set_xlabel("Round-trip transaction cost (bps)")
     ax.set_ylabel("Sharpe ratio (excess)")
-    ax.legend(fontsize=6, frameon=False, ncol=2, loc="lower left")
+    ax.legend(fontsize=6, frameon=False, ncol=3, loc="upper center", bbox_to_anchor=(0.5, -0.25))
     fig.tight_layout()
     fig.savefig(path)
     plt.close(fig)

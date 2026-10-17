@@ -1,14 +1,37 @@
 # PACT — Protocols for Agent Coordination in Trading
 
-Master's project — Track 4 (Coordination & Attribution Research). The
-research question, data sources, agent specs, ablation matrix, and paper
-structure all live in `multi_agent_trading_paper_spec.md`. Read that first.
+A coordination-and-attribution harness for multi-agent LLM trading systems.
+It holds the specialist agents, data and portfolio construction fixed and
+varies only the coordination protocol, under GPT-4o and no-LLM regimes,
+against a deterministic baseline and passive benchmarks.
 
 The contribution name comes from the headline ablation: 7 coordination
 **protocols** × 2 LLM regimes, tested against single-agent and
 no-communication ensemble baselines. PACT = the protocol-level study.
 
 This README only documents how the code is wired. Findings live in the paper.
+
+## Results schema v2 (read before reusing old results)
+
+The `paper-fixes` changes alter results materially. Cells written by the
+earlier engine are rejected by `load_backtest_result` and must be rerun:
+
+- BTC/IBIT splice is now return-based (the level splice produced a -99.9%
+  return on 2024-01-11).
+- Mixed crypto/ETF panels are aligned to the exchange calendar.
+- Holdings-based simulator: positions drift, cash and collateral earn the
+  13-week T-bill rate, costs are half of the round-trip quote per one-way unit,
+  orders execute at the next session's close, 400-day estimation warm-up,
+  drawdown breaker on the strategy's own NAV.
+- Sharpe ratios use excess returns over T-bills.
+- ALFRED observations are filtered by first-release date (no pre-publication
+  CPI/GDP); the macro regime uses changes in YoY IP growth and CPI inflation.
+- Wikipedia uses previous-day data; Google Trends uses completed weeks only.
+- The Ledoit-Wolf Sharpe test uses the correct HAC covariance matrix.
+- Every swallowed agent/LLM failure is counted in cell metadata.
+
+`scripts/run_pitfall_audit.py` quantifies the effect of each fix on the
+deterministic baseline (prices only, no API keys).
 
 ## Layout
 
@@ -68,17 +91,15 @@ python scripts/prefetch_constituents.py --window b
 # Alt-data 5-variant ablation (spec §6.6)
 python scripts/run_altdata_ablation.py --protocols sequential_pipeline debate --regime frontier --window b
 
-# Robustness on saved cells (TC sensitivity + NBER + VIX)
-python scripts/run_robustness.py
+# Implementation audit on the deterministic baseline (prices only)
+python scripts/run_pitfall_audit.py
 
-# Per-agent attribution (LOO + optional DAG-Shapley)
+# Per-agent attribution (LOO + optional Monte Carlo Shapley)
 python scripts/run_attribution.py --cell b__frontier__sequential_pipeline [--shapley]
 
-# Paper tables (CSV + Markdown)
-python scripts/build_paper_tables.py --window b
-
-# Paper figures (PNGs)
-python scripts/build_paper_figures.py --window b
+# Every number, table and figure in the paper (benchmarks, tests, CBS,
+# cost sensitivity, sub-periods, LOO, alt-data) -- single source of truth
+python scripts/export_paper.py --out ../pact-paper/generated
 
 # TradingAgents reproduction harness check (spec §12 step 4)
 python scripts/reproduce_tradingagents.py
