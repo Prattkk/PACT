@@ -271,8 +271,10 @@ def main() -> None:
         N.set("llm.naboveBestBench", str(n_llm_above_best_bench), n_llm_above_best_bench)
         N.set("llm.naboveDet", str(n_llm_above_det), n_llm_above_det)
         N.set("llm.ncells", str(len(llm_cells)), len(llm_cells))
+        srs = [llm_cells[p]["sr"] for p in llm_cells]
+        N.set("llm.spread", plain(max(srs) - min(srs)), max(srs) - min(srs))
     else:
-        for k in ("llm.naboveBestBench", "llm.naboveDet", "llm.ncells"):
+        for k in ("llm.naboveBestBench", "llm.naboveDet", "llm.ncells", "llm.spread"):
             N.set(k, PENDING)
 
     # ---------------- H1 and tests
