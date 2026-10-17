@@ -11,6 +11,7 @@ import json
 from datetime import date
 
 from agents.base_agent import AgentDecision, InstrumentView
+from agents._llm_helpers import parse_json_object, tally
 from coordination.base import CoordinationProtocol, CoordinationResult
 
 
@@ -59,6 +60,7 @@ class DebateProtocol(CoordinationProtocol):
                 )
                 continue
 
+            tally("debate_adjudicator", "calls")
             try:
                 resp = self.llm.complete(
                     system=(
@@ -70,14 +72,18 @@ class DebateProtocol(CoordinationProtocol):
                         {
                             "instrument": sym,
                             "as_of": as_of.isoformat(),
-                            "bull": [{"agent": n, "factors": v.factors} for n, v in bull],
-                            "bear": [{"agent": n, "factors": v.factors} for n, v in bear],
+                            "bull": [{"agent": n, "direction": v.direction, "conviction": v.conviction,
+                                      "factors": v.factors} for n, v in bull],
+                            "bear": [{"agent": n, "direction": v.direction, "conviction": v.conviction,
+                                      "factors": v.factors} for n, v in bear],
                         },
                         default=float,
                     ),
                     max_tokens=400,
                 )
-                obj = json.loads(resp.text)
+                obj = parse_json_object(resp.text)
+                if obj is None:
+                    raise ValueError("unparseable adjudicator output")
                 final.append(
                     InstrumentView(
                         instrument=sym,
@@ -89,6 +95,7 @@ class DebateProtocol(CoordinationProtocol):
                 )
             except Exception as e:
                 self._record_failure("llm_adjudicator", e)
+                tally("debate_adjudicator", "call_failed")
                 final.append(
                     InstrumentView(instrument=sym, direction=0, conviction=0.0, horizon="1w")
                 )

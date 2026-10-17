@@ -11,16 +11,17 @@ from datetime import date
 from statistics import median
 
 from agents.base_agent import AgentDecision, InstrumentView
+from agents.portfolio_manager import conviction_weighted_vote
 from coordination.base import CoordinationProtocol, CoordinationResult
 
 
 class IndependentEnsembleProtocol(CoordinationProtocol):
     name = "independent_ensemble"
 
-    def __init__(self, agents, universe: tuple[str, ...], aggregator: str = "majority"):
+    def __init__(self, agents, universe: tuple[str, ...], aggregator: str = "vote"):
         super().__init__(agents)
         self.universe = universe
-        if aggregator not in ("majority", "mean"):
+        if aggregator not in ("vote", "majority", "mean"):
             raise ValueError(f"unknown aggregator {aggregator}")
         self.aggregator = aggregator
 
@@ -47,6 +48,13 @@ class IndependentEnsembleProtocol(CoordinationProtocol):
                 final.append(
                     InstrumentView(instrument=sym, direction=0, conviction=0.0, horizon="1w")
                 )
+                continue
+            if self.aggregator == "vote":
+                pairs = [(dd.agent_name, dd.view_for(sym).direction, dd.view_for(sym).conviction)
+                         for dd in decisions if dd.view_for(sym) is not None]
+                d, conv, _ = conviction_weighted_vote(pairs)
+                final.append(InstrumentView(instrument=sym, direction=d, conviction=float(conv),
+                                            horizon="1w", rationale=f"ensemble vote, n={len(dirs)}"))
                 continue
             if self.aggregator == "majority":
                 d = int(round(median(dirs)))

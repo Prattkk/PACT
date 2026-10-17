@@ -47,6 +47,28 @@ def parse_view_list(
     return out
 
 
+def parse_json_object(text: str) -> dict | None:
+    """Parse one JSON object from LLM output, tolerating code fences and prose."""
+    try:
+        obj = json.loads(text)
+        return obj if isinstance(obj, dict) else None
+    except (json.JSONDecodeError, TypeError):
+        pass
+    i, j = text.find("{"), text.rfind("}")
+    if i >= 0 and j > i:
+        try:
+            obj = json.loads(text[i : j + 1])
+            return obj if isinstance(obj, dict) else None
+        except json.JSONDecodeError:
+            return None
+    return None
+
+
+def tally(component: str, outcome: str, n: int = 1) -> None:
+    """Record an LLM call outcome: 'calls', 'call_failed', 'unparseable', 'symbols_filled_from_anchor'."""
+    LLM_STATS[f"{component}:{outcome}"] += n
+
+
 def _try_load_json(text: str) -> Any:
     try:
         return json.loads(text)
@@ -99,6 +121,9 @@ def views_from_llm_or_anchor(
         log.warning("agent=%s llm output unparseable; falling back to anchor", agent_name)
         return anchor_views
 
+    by_anchor_f = {v.instrument: v.factors for v in anchor_views}
+    parsed = [v if v.factors else v.model_copy(update={"factors": by_anchor_f.get(v.instrument, {})})
+              for v in parsed]   # keep the factors so downstream protocols (e.g. debate) can read them
     seen = {v.instrument for v in parsed}
     n_missing = sum(1 for s in universe if s.upper() not in seen)
     if n_missing:

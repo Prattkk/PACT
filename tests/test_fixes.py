@@ -131,3 +131,59 @@ def test_alfred_point_in_time_uses_release_dates():
     assert A._point_in_time(s2, "GDP", date(2022, 1, 1), date(2022, 4, 1)).empty
     out2 = A._point_in_time(s2, "GDP", date(2022, 1, 1), date(2022, 5, 10))
     assert list(out2.index) == [pd.Timestamp("2022-01-01")]
+
+
+def test_eia_and_noaa_respect_publication_lags():
+    from agents.fundamentals_carry import FundamentalsCarryAgent
+    ag = FundamentalsCarryAgent(None, ("USO",))
+    weeks = pd.date_range("2023-01-06", periods=60, freq="W-FRI")
+    vals = np.r_[np.zeros(59), 100.0]           # spike in the week ending 2024-02-23
+    ag._crude_inv = pd.Series(vals, index=weeks)
+    assert ag._uso_inventory_z(weeks[-1].date()) == 0.0 or abs(ag._uso_inventory_z(weeks[-1].date())) < 1e-9
+    assert ag._uso_inventory_z((weeks[-1] + pd.Timedelta(days=6)).date()) > 1.0   # visible after release
+    months = pd.date_range("2021-01-01", periods=30, freq="MS")
+    ag._hdd = pd.Series(np.r_[np.zeros(29), 50.0], index=months)               # spike in the last month
+    assert ag._hdd_z((months[-1] + pd.Timedelta(days=20)).date()) == 0.0        # month not over yet
+    assert ag._hdd_z((months[-1] + pd.DateOffset(months=1) + pd.Timedelta(days=10)).date()) > 1.0
+
+
+def test_json_object_parsing_tolerates_fences():
+    from agents._llm_helpers import parse_json_object
+    assert parse_json_object('```json\n{"direction": 1, "conviction": 0.4}\n```')["direction"] == 1
+    assert parse_json_object("no json here") is None
+
+
+def test_ensemble_uses_the_manager_vote():
+    from agents.base_agent import AgentDecision, InstrumentView
+    from agents.portfolio_manager import PortfolioManagerAgent
+    from coordination.independent_ensemble import IndependentEnsembleProtocol
+
+    class Stub:
+        def __init__(self, name, d, c):
+            self.name, self.d, self.c = name, d, c
+        def run(self, as_of):
+            return AgentDecision(agent_name=self.name, as_of=as_of,
+                                 views=[InstrumentView(instrument="SPY", direction=self.d, conviction=self.c, horizon="1w")])
+    agents = {"macro_regime": Stub("macro_regime", 1, 0.4), "narrative_event": Stub("narrative_event", -1, 0.3),
+              "technical_trend": Stub("technical_trend", 1, 0.9), "risk_correlation": Stub("risk_correlation", -1, 1.0)}
+    ens = IndependentEnsembleProtocol(agents, ("SPY",)).run(date(2024, 1, 5)).final_views[0]
+    pm = PortfolioManagerAgent(None, ("SPY",))
+    pm.set_inputs([a.run(date(2024, 1, 5)) for a in agents.values()])
+    ref = pm.run(date(2024, 1, 5)).views[0]
+    assert (ens.direction, round(ens.conviction, 9)) == (ref.direction, round(ref.conviction, 9))
+
+
+def test_macro_regime_neutral_when_inputs_missing():
+    from agents.macro_regime import MacroRegimeAgent
+    assert MacroRegimeAgent._classify_regime({}) == "unknown"
+    assert MacroRegimeAgent._classify_regime(
+        {"industrial_production_yoy_rate_chg_3m": -0.5, "cpi_yoy_yoy_rate_chg_3m": 0.2}) == "growth_down_x_infl_up"
+
+
+def test_alfred_rejects_implausible_release_dates():
+    import data.fetchers.alfred as A
+    idx = pd.date_range("2022-01-01", periods=12, freq="MS")
+    good = pd.Series(idx + pd.Timedelta(days=12), index=idx)
+    bad = pd.Series(pd.Timestamp("2026-10-01"), index=idx)    # today's vintage, not first release
+    assert A._release_dates_plausible("CPIAUCSL", good)
+    assert not A._release_dates_plausible("CPIAUCSL", bad)

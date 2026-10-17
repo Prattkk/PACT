@@ -11,6 +11,25 @@ from datetime import date
 
 from agents.base_agent import AgentDecision, BaseAgent, InstrumentView
 
+VOTE_THRESHOLD = 0.1
+
+
+def conviction_weighted_vote(pairs: list[tuple[str, int, float]]) -> tuple[int, float, float]:
+    """Shared aggregation rule: (agent, direction, conviction) -> (direction, conviction, score).
+
+    score = sum(d*c)/sum(c) over directional agents (the risk agent is skipped);
+    direction = sign(score) if |score| > 0.1; conviction = min(|score|, 1).
+    """
+    num = den = 0.0
+    for agent, d, c in pairs:
+        if agent.startswith("risk_correlation"):
+            continue
+        num += d * c
+        den += c
+    score = (num / den) if den > 0 else 0.0
+    direction = int(1 if score > VOTE_THRESHOLD else (-1 if score < -VOTE_THRESHOLD else 0))
+    return direction, min(abs(score), 1.0), score
+
 
 class PortfolioManagerAgent(BaseAgent):
     name = "portfolio_manager"
@@ -41,20 +60,9 @@ class PortfolioManagerAgent(BaseAgent):
         # override this by injecting a different aggregator function.
         views: list[InstrumentView] = []
         for sym, f in factors_by_instrument.items():
-            num = 0.0
-            den = 0.0
-            for k, v in f.items():
-                if not k.endswith("_dir"):
-                    continue
-                conv_key = k.replace("_dir", "_conv")
-                w = f.get(conv_key, 0.0)
-                # Risk agent contributes through scaling, not signed direction.
-                if k.startswith("risk_correlation"):
-                    continue
-                num += v * w
-                den += w
-            score = (num / den) if den > 0 else 0.0
-            direction = int(1 if score > 0.1 else (-1 if score < -0.1 else 0))
+            pairs = [(k[: -len("_dir")], int(v), float(f.get(k.replace("_dir", "_conv"), 0.0)))
+                     for k, v in f.items() if k.endswith("_dir")]
+            direction, _, score = conviction_weighted_vote(pairs)
             views.append(
                 InstrumentView(
                     instrument=sym,

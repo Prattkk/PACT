@@ -119,8 +119,12 @@ class MacroRegimeAgent(BaseAgent):
             return x is not None and x == x  # not NaN
         g = m.get("industrial_production_yoy_rate_chg_3m")
         i = m.get("cpi_yoy_yoy_rate_chg_3m")
-        growth_up = (g > 0) if _ok(g) else ((m.get("gdp_chg_3m") or 0.0) > 0)
-        infl_up = (i > 0) if _ok(i) else False
+        if not _ok(g):
+            g = m.get("gdp_chg_3m")
+        if not (_ok(g) and _ok(i)):
+            return "unknown"   # missing inputs -> neutral priors, never a spurious quadrant
+        growth_up = g > 0
+        infl_up = i > 0
         return f"{'growth_up' if growth_up else 'growth_down'}_x_{'infl_up' if infl_up else 'infl_down'}"
 
 

@@ -1,0 +1,9 @@
+{
+  "label": "prefix_code",
+  "sharpe": -0.2641,
+  "mdd": -0.284,
+  "ann_return": null,
+  "rows": 984,
+  "note": "commit cb8e79f (pre-fix engine), pandas 2.2.3, same price snapshot; all pitfalls plus same-close execution and no position drift",
+  "how_to_reproduce": "git checkout cb8e79f; install pandas==2.2.3; run the deterministic_only cell on window b with the same price snapshot; Sharpe = mean/std*sqrt(252) of the saved returns"
+}

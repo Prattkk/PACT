@@ -42,7 +42,13 @@ EQUITY_INDICES = ("SPY", "QQQ", "IWM", "EEM")
 # credible enough — the cap-weighted earnings-yield aggregation in
 # edgar_aggregates.py handles loss-making constituents (common in EEM)
 # without blowing up the inverse-P/E ratio.
-EQUITY_INDICES_AGGREGATABLE = ("SPY", "QQQ", "EEM")
+# Equity-index XBRL aggregation is disabled: its TTM sums mix year-to-date and
+# quarterly facts and its market caps mix split-adjusted prices with as-reported
+# share counts, and the constituent lists are fixed as of 2025 (look-ahead in
+# selection). Re-enable only after those are fixed and validated.
+EQUITY_INDICES_AGGREGATABLE: tuple[str, ...] = ()
+EIA_RELEASE_LAG_DAYS = 6     # weekly period ends Friday; WPSR released the following Wed (Thu after holidays)
+NOAA_RELEASE_LAG_DAYS = 10   # monthly GSOM value usable only after the month ends (+ publication lag)
 BONDS = ("IEF", "SHY")
 
 SYSTEM_PROMPT = (
@@ -185,7 +191,9 @@ class FundamentalsCarryAgent(BaseAgent):
         s = self._hdd
         if s is None or len(s) < 12:
             return 0.0
-        pit = s.loc[s.index <= pd.Timestamp(as_of)]
+        # monthly values are dated at the start of the month: usable after month end + lag
+        avail = s.index + pd.DateOffset(months=1) + pd.Timedelta(days=NOAA_RELEASE_LAG_DAYS)
+        pit = s.loc[avail <= pd.Timestamp(as_of)]
         if len(pit) < 12:
             return 0.0
         latest = float(pit.iloc[-1])
@@ -313,7 +321,8 @@ class FundamentalsCarryAgent(BaseAgent):
         if s is None or len(s) < 8:
             return 0.0
         as_of_ts = pd.Timestamp(as_of)
-        pit = s.loc[s.index <= as_of_ts]
+        # EIA `period` is the week-ending date; the report is published days later
+        pit = s.loc[s.index + pd.Timedelta(days=EIA_RELEASE_LAG_DAYS) <= as_of_ts]
         if len(pit) < 8:
             return 0.0
         latest = float(pit.iloc[-1])
@@ -325,14 +334,14 @@ class FundamentalsCarryAgent(BaseAgent):
 
     def _fetch_rates(self, as_of: date) -> dict[str, float]:
         if self.cell_window and not getattr(self, "_alfred_prefetched", False):
-            cell_start = self.cell_window[0] - timedelta(days=400)
+            cell_start = self.cell_window[0] - timedelta(days=560)
             cell_end = self.cell_window[1]
             prefetch_window(
                 ("DGS10", "DGS2", "DFEDTARU", "CPIAUCSL"),
                 cell_start, cell_end,
             )
             self._alfred_prefetched = True
-        start = as_of - timedelta(days=400)
+        start = as_of - timedelta(days=560)
         out: dict[str, float] = {}
         for label in ("ten_year", "two_year", "fed_funds"):
             try:
@@ -344,8 +353,9 @@ class FundamentalsCarryAgent(BaseAgent):
         # cpi_yoy: CPIAUCSL is the level series; compute YoY % from latest vs ~252 days back.
         try:
             cpi = first_release(HEADLINE_SERIES["cpi_yoy"], start, as_of)
-            if len(cpi) >= 2:
-                out["cpi_yoy"] = float((cpi.iloc[-1] / cpi.iloc[0] - 1.0) * 100.0)
+            cpi = cpi[~cpi.index.duplicated(keep="last")]
+            if len(cpi) >= 13:   # latest published month vs the same month a year earlier
+                out["cpi_yoy"] = float((cpi.iloc[-1] / cpi.iloc[-13] - 1.0) * 100.0)
             else:
                 out["cpi_yoy"] = 0.0
         except Exception as e:

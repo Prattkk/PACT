@@ -40,6 +40,8 @@ class SingleAgentProtocol(CoordinationProtocol):
                     InstrumentView(instrument=sym, direction=0, conviction=0.0, horizon="1w")
                 )
         else:
+            from agents._llm_helpers import tally
+            tally("monolith", "calls")
             try:
                 resp = self.llm.complete(
                     system=(
@@ -54,9 +56,13 @@ class SingleAgentProtocol(CoordinationProtocol):
                     max_tokens=2048,
                 )
                 parsed = _safe_parse_views(resp.text, self.universe)
+                n_real = sum(1 for v in parsed if v.rationale or v.direction != 0 or v.conviction > 0)
+                if n_real == 0:
+                    tally("monolith", "unparseable")
                 views = parsed
             except Exception as e:
                 self._record_failure("llm_monolith", e)
+                tally("monolith", "call_failed")
                 views = [
                     InstrumentView(instrument=s, direction=0, conviction=0.0, horizon="1w")
                     for s in self.universe

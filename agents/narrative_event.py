@@ -195,7 +195,7 @@ class NarrativeEventAgent(BaseAgent):
             # Polymarket secondary (Window B only)
             if polymarket is not None and not polymarket.empty and "polymarket_event_prob" in self.enabled_secondary:
                 if sym in polymarket.columns:
-                    pit = polymarket[sym].loc[polymarket.index <= as_of_ts].dropna()
+                    pit = polymarket[sym].loc[polymarket.index <= as_of_ts - pd.Timedelta(hours=48)].dropna()
                     if not pit.empty:
                         f["polymarket_event_prob"] = float(pit.iloc[-1])
                         if "polymarket_prob_change" in self.enabled_secondary and len(pit) >= 7:

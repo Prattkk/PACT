@@ -11,6 +11,7 @@ import json
 from datetime import date
 
 from agents.base_agent import AgentDecision, InstrumentView
+from agents._llm_helpers import parse_json_object, tally
 from coordination.base import CoordinationProtocol, CoordinationResult
 from coordination.deterministic_only import DeterministicOnlyProtocol
 
@@ -50,6 +51,7 @@ class LLMPlusAnchorProtocol(CoordinationProtocol):
                 )
                 continue
 
+            tally("anchor_refiner", "calls")
             try:
                 resp = self.llm.complete(
                     system=(
@@ -75,7 +77,9 @@ class LLMPlusAnchorProtocol(CoordinationProtocol):
                     ),
                     max_tokens=400,
                 )
-                obj = json.loads(resp.text)
+                obj = parse_json_object(resp.text)
+                if obj is None:
+                    raise ValueError("unparseable refiner output")
                 final.append(
                     InstrumentView(
                         instrument=sym,
@@ -87,6 +91,7 @@ class LLMPlusAnchorProtocol(CoordinationProtocol):
                 )
             except Exception as e:
                 self._record_failure("llm_refiner", e)
+                tally("anchor_refiner", "call_failed")
                 final.append(anchor_v)
 
         return CoordinationResult(

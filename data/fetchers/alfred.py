@@ -106,6 +106,10 @@ def _rest_first_release(series_id: str, start: date, end: date) -> pd.Series:
         "observation_start": start.isoformat(),
         "observation_end": end.isoformat(),
         "output_type": 4,  # vintage data: first release only
+        # output_type=4 is evaluated over the real-time period; the API default is
+        # today-only, so request the full period to get each value's first release.
+        "realtime_start": "1776-07-04",
+        "realtime_end": "9999-12-31",
         "file_type": "json",
     }
     r = requests.get(ALFRED_REST, params=params, timeout=30)
@@ -127,8 +131,25 @@ def _rest_first_release(series_id: str, start: date, end: date) -> pd.Series:
     if not rows:
         return pd.Series(dtype=float, name=series_id)
     s = pd.Series({d: v for d, v, _ in rows}, name=series_id).sort_index()
-    s.attrs["release"] = pd.Series({d: r for d, _, r in rows}).sort_index()
+    rel = pd.Series({d: r for d, _, r in rows}).sort_index()
+    if _release_dates_plausible(series_id, rel):
+        s.attrs["release"] = rel
+    else:
+        log.warning("alfred %s: realtime_start values implausible; using conservative release lags", series_id)
     return s
+
+
+def _release_dates_plausible(series_id: str, rel: pd.Series) -> bool:
+    """Reject release dates that are clearly vintage dates of a later revision.
+
+    A first release follows its observation by weeks to a few months. If the
+    returned dates lag old observations by more than a year, the response is
+    not initial-release data and the conservative lag table is used instead.
+    """
+    if rel.empty:
+        return False
+    lag = (pd.to_datetime(rel.values) - pd.to_datetime(rel.index)).days
+    return bool(len(lag)) and float(pd.Series(lag).median()) < 200 and int(pd.Series(lag).min()) >= 0
 
 
 def first_release(

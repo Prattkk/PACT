@@ -73,10 +73,11 @@ AGENTS = ("macro_regime", "narrative_event", "cross_asset_transmission", "techni
 AGENT_LABEL = {"macro_regime": "Macro regime", "narrative_event": "Narrative",
                "cross_asset_transmission": "Cross-asset", "technical_trend": "Technical trend",
                "fundamentals_carry": "Fundamentals", "risk_correlation": "Risk"}
-ALT_VARIANTS = ("text_only", "plus_attention", "plus_event_probs", "plus_instrument", "full")
-ALT_LABEL = {"text_only": "Text only (level)", "plus_attention": "+ Attention",
-             "plus_event_probs": "+ Event probabilities", "plus_instrument": "+ Instrument-specific",
-             "full": "Full stack"}
+ALT_VARIANTS = ("text_only", "plus_attention", "plus_instrument", "full")
+ALT_LABEL = {"text_only": "Base (Sharpe level)", "plus_attention": "+ Attention",
+             "plus_instrument": "+ Instrument-specific", "full": "+ Both"}
+BENCH_SHORT = {"spy_bh": "SPY buy-and-hold", "equal_weight": "the equal-weight portfolio",
+               "sixty_forty": "the 60/40 portfolio", "inverse_vol": "the inverse-volatility portfolio"}
 TC_GRID = (0, 5, 10, 30, 50, 100)
 PENDING = r"\pending"
 
@@ -260,7 +261,7 @@ def main() -> None:
     N.set("best.llm.name", SHORT[best_llm] if best_llm else PENDING, best_llm)
     N.set("best.llm.sr", num(llm_cells[best_llm]["sr"]) if best_llm else PENDING)
     best_bench = max(bst, key=lambda k: bst[k]["sr"])
-    N.set("best.bench.name", BENCHMARK_LABELS[best_bench], best_bench)
+    N.set("best.bench.name", BENCH_SHORT[best_bench], best_bench)
     N.set("best.bench.sr", num(bst[best_bench]["sr"]), bst[best_bench]["sr"])
     det_sr = sr("none", "deterministic_only")
     n_bench_beaten_det = sum(1 for k in bst if not math.isnan(det_sr) and det_sr > bst[k]["sr"])
@@ -316,9 +317,12 @@ def main() -> None:
         results.append({"label": label, "available": True, **lw, "bs_lo": bs["ci_lo"], "bs_hi": bs["ci_hi"],
                         "bs_p": bs["p_value"]})
     avail = [r for r in results if r["available"] and not math.isnan(r["p_value"])]
-    qs = bh_qvalues([r["p_value"] for r in avail]) if avail else []
-    for r, q in zip(avail, qs):
-        r["q"] = q
+    family_complete = len(avail) == len(results)
+    if family_complete:   # BH over the full planned family only; otherwise q is pending
+        for r, q in zip(avail, bh_qvalues([r["p_value"] for r in avail])):
+            r["q"] = q
+    else:
+        missing.append("test family incomplete: q-values pending")
     trow = []
     for r in results:
         if not r["available"]:
@@ -328,16 +332,16 @@ def main() -> None:
                     f"{interval(r['bs_lo'], r['bs_hi'])} \\\\")
     (out / "tab_tests.tex").write_text("\n".join(trow) + "\n")
     N.set("tests.n", str(len(results)), len(results))
-    N.set("tests.nsig", str(sum(1 for r in avail if r.get("q", 1) < 0.05)) if len(avail) == len(results) else PENDING)
+    N.set("tests.nsig", str(sum(1 for r in avail if r.get("q", 1) < 0.05)) if family_complete else PENDING)
 
     h1 = [r for r in results if r["label"].startswith("H1") and r["available"]]
-    if len(h1) == len(COORDINATED):
+    if len(h1) == len(COORDINATED) and family_complete:
         n_better = sum(1 for r in h1 if r["sr_diff"] > 0)
         n_sig_better = sum(1 for r in h1 if r["sr_diff"] > 0 and r.get("q", 1) < 0.05)
         n_sig_worse = sum(1 for r in h1 if r["sr_diff"] < 0 and r.get("q", 1) < 0.05)
-        verdict = "supported" if n_sig_better >= 1 and n_sig_worse == 0 else (
-            "contradicted" if n_sig_worse >= 1 and n_sig_better == 0 else
-            "mixed" if n_sig_better >= 1 else "not supported")
+        verdict = ("supported" if n_sig_better >= 1 and n_sig_worse == 0 else
+                   "contradicted" if n_sig_worse >= 1 and n_sig_better == 0 else
+                   "only partly supported" if n_sig_better >= 1 else "not supported")
         N.set("hone.nbetter", str(n_better), n_better)
         N.set("hone.nsigbetter", str(n_sig_better), n_sig_better)
         N.set("hone.nsigworse", str(n_sig_worse), n_sig_worse)
@@ -367,7 +371,7 @@ def main() -> None:
         tag = f"cbs.{reg}.{p.replace('_', '')}"
         if math.isnan(v):
             have = (reg, p) in cells and (reg, "independent_ensemble") in cells
-            N.set(tag, r">400" if have else PENDING, v)
+            N.set(tag, r"$>$400" if have else PENDING, v)
         else:
             N.set(tag, f"{v:.0f}", v)
     fr = [cbs_rows.get(("frontier", p), float("nan")) for p in COORDINATED]
@@ -377,7 +381,7 @@ def main() -> None:
         N.set("cbs.frontier.max", f"{max(vals):.0f}", max(vals))
         n50 = sum(1 for v in vals if v > 50)
         N.set("htwo.n", str(n50), n50)
-        N.set("htwo.verdict", "supported" if n50 >= 1 else "not supported")
+        N.set("htwo.verdict", "met" if n50 >= 1 else "not met")
     else:
         for k in ("cbs.frontier.max", "htwo.n", "htwo.verdict"):
             N.set(k, PENDING)
@@ -409,7 +413,7 @@ def main() -> None:
     if loo_ok:
         full = float(loo["sharpe_full"].iloc[0])
         N.set("loo.full", num(full), full)
-        for a in AGENTS:
+        for a in AGENTS[:-1]:   # risk agent: no directional role, Delta = 0 by construction
             r = loo[loo["dropped_agent"] == a]
             if r.empty:
                 lrow.append(f"{AGENT_LABEL[a]} & {PENDING} & {PENDING} \\\\")
@@ -417,16 +421,16 @@ def main() -> None:
             w, dlt = float(r["sharpe_without"].iloc[0]), float(r["sharpe_delta"].iloc[0])
             lrow.append(f"{AGENT_LABEL[a]} & {num(w)} & {num(dlt)} \\\\")
             N.set(f"loo.{a.replace('_', '')}", num(dlt), dlt)
-        d = loo.set_index("dropped_agent")["sharpe_delta"]
+        d = loo[loo["dropped_agent"] != "risk_correlation"].set_index("dropped_agent")["sharpe_delta"]
         N.set("loo.mostneg", AGENT_LABEL.get(d.idxmin(), d.idxmin()).lower(), d.idxmin())
         N.set("loo.mostnegval", num(float(d.min())), float(d.min()))
         N.set("loo.mostpos", AGENT_LABEL.get(d.idxmax(), d.idxmax()).lower(), d.idxmax())
         N.set("loo.mostposval", num(float(d.max())), float(d.max()))
         N.set("loo.nlarge", str(int((d.abs() >= 0.10).sum())), int((d.abs() >= 0.10).sum()))
-        N.set("hfour.verdict", "supported" if (d.abs() >= 0.10).any() else "not supported")
+        N.set("hfour.verdict", "met" if (d.abs() >= 0.10).any() else "not met")
     else:
         missing.append(f"{loo_path} for {args.loo_cell} (v2)")
-        for a in AGENTS:
+        for a in AGENTS[:-1]:
             lrow.append(f"{AGENT_LABEL[a]} & {PENDING} & {PENDING} \\\\")
         for k in ("loo.full", "loo.mostneg", "loo.mostnegval", "loo.mostpos", "loo.mostposval", "loo.nlarge",
                   "hfour.verdict"):
@@ -455,17 +459,17 @@ def main() -> None:
                 N.set(f"alt.{p.replace('_', '')}.{v.replace('_', '')}", num(dlt), dlt)
         arow.append(f"{ALT_LABEL[v]} & " + " & ".join(cols) + " \\\\")
     (out / "tab_altdata.tex").write_text("\n".join(arow) + "\n")
-    ev = [alt.get((p, "plus_event_probs"), float("nan")) - alt.get((p, "text_only"), float("nan"))
+    ev = [alt.get((p, "plus_attention"), float("nan")) - alt.get((p, "text_only"), float("nan"))
           for p in ("sequential_pipeline", "debate")]
     if not any(math.isnan(x) for x in ev):
         n_ok = sum(1 for x in ev if x >= 0.05)
-        N.set("hthree.verdict", "supported" if n_ok == 2 else ("partly supported" if n_ok == 1 else "not supported"))
+        N.set("hthree.verdict", "met" if n_ok == 2 else ("met for one of the two protocols" if n_ok == 1 else "not met"))
     else:
         N.set("hthree.verdict", PENDING)
     if best_alt[0]:
         N.set("alt.best", {"plus_attention": "attention features (Wikipedia, Google Trends)",
-                           "plus_event_probs": "attention plus event probabilities (Polymarket)",
-                           "plus_instrument": "instrument-specific data", "full": "the full stack"}[best_alt[0][1]],
+                           "plus_instrument": "instrument-specific data",
+                           "full": "attention plus instrument-specific data"}[best_alt[0][1]],
               best_alt[0][1])
         N.set("alt.bestval", num(best_alt[1]), best_alt[1])
     else:
@@ -475,8 +479,14 @@ def main() -> None:
     # ---------------- implementation audit
     audit_path = TABLES_DIR / "pitfall_audit.json"
     arows = []
+    prefix_path = TABLES_DIR / "pitfall_audit_prefix.json"
     if audit_path.exists():
         audit = json.loads(audit_path.read_text())
+        audit = [r for r in audit if r["label"] != "prefix_code"]
+        if prefix_path.exists():
+            audit.append(json.loads(prefix_path.read_text()))
+        else:
+            missing.append(str(prefix_path))
         fixed = next(r for r in audit if r["label"] == "fixed")
         for r in audit:
             N.set(f"audit.{r['label'].replace('_', '')}.sr", num(r["sharpe"]), r["sharpe"])
@@ -503,7 +513,7 @@ def main() -> None:
         if reg != "frontier":
             continue
         stats = c["metadata"].get("llm_stats", {}) or {}
-        calls = sum(v for k, v in stats.items() if k.endswith(":calls"))
+        calls = sum(v for k, v in stats.items() if k.endswith(":calls"))   # specialist + protocol-level
         fails = sum(v for k, v in stats.items() if k.endswith(":call_failed") or k.endswith(":unparseable"))
         prot_fail = int(c["metadata"].get("agent_failure_total", 0))
         fb.append((fails / calls if calls else 0.0, prot_fail))

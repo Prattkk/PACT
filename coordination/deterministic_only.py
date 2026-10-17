@@ -28,7 +28,7 @@ class DeterministicOnlyProtocol(CoordinationProtocol):
 
     def run(self, as_of: date) -> CoordinationResult:
         start = as_of - timedelta(days=400)
-        prices = fetch_panel(list(self.universe), start, as_of, field="Adj Close")
+        prices = fetch_panel(list(self.universe), start, as_of + timedelta(days=1), field="Adj Close")  # end is exclusive
         moms = multi_horizon_momentum(prices) if not prices.empty else None
 
         final: list[InstrumentView] = []

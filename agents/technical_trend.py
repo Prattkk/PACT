@@ -27,7 +27,7 @@ class TechnicalTrendAgent(BaseAgent):
 
     def extract_factors(self, as_of: date) -> dict[str, dict[str, float]]:
         start = as_of - timedelta(days=self.lookback_days)
-        prices = fetch_panel(list(self.universe), start, as_of, field="Adj Close")
+        prices = fetch_panel(list(self.universe), start, as_of + timedelta(days=1), field="Adj Close")  # end is exclusive
         if prices.empty:
             return {s: {} for s in self.universe}
         rets = prices.pct_change().dropna(how="all")
