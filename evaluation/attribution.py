@@ -2,9 +2,8 @@
 
 - Leave-one-out: re-run protocol with each specialist removed in turn;
   attribute Sharpe gap to that agent.
-- DAG-Shapley approximation per HiveMind (arXiv 2512.06432). Marginal
-  contributions sampled via the protocol's natural agent DAG, reducing
-  call count by >80% vs full Shapley.
+- Monte Carlo permutation Shapley: average marginal Sharpe contribution of
+  each agent over random orderings (v(empty set) taken as 0, i.e. flat).
 """
 
 from __future__ import annotations

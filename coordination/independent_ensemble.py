@@ -31,8 +31,8 @@ class IndependentEnsembleProtocol(CoordinationProtocol):
                 continue
             try:
                 decisions.append(agent.run(as_of))
-            except Exception:
-                pass
+            except Exception as e:
+                self._record_failure(name, e)
 
         final: list[InstrumentView] = []
         for sym in self.universe:

@@ -164,7 +164,8 @@ class NarrativeEventAgent(BaseAgent):
             if wiki and "wiki_abnormal_attention" in self.enabled_secondary:
                 s = wiki.get(sym)
                 if s is not None and not s.empty:
-                    pit = s.loc[s.index <= as_of_ts]
+                    # pageviews for day d are complete only after d ends: use days < as_of
+                    pit = s.loc[s.index < as_of_ts]
                     if len(pit) >= 30:
                         recent = pit.tail(7).mean()
                         prior = pit.iloc[-30:-7]
@@ -178,7 +179,8 @@ class NarrativeEventAgent(BaseAgent):
             if gtrends and "gtrends_abnormal_level" in self.enabled_secondary:
                 s = gtrends.get(sym)
                 if s is not None and not s.empty:
-                    pit = s.loc[s.index <= as_of_ts]
+                    # weekly points are labelled by week start: use completed weeks only
+                    pit = s.loc[s.index + pd.Timedelta(days=7) <= as_of_ts]
                     if len(pit) >= 13:
                         recent = float(pit.tail(2).mean())
                         prior = pit.iloc[-13:-2]
@@ -186,7 +188,9 @@ class NarrativeEventAgent(BaseAgent):
                         if sd > 0:
                             f["gtrends_abnormal_level"] = (recent - mu) / sd
                         if "gtrends_momentum" in self.enabled_secondary and len(pit) >= 4:
-                            f["gtrends_momentum"] = float(pit.iloc[-1] - pit.iloc[-4])
+                            # relative change: invariant to Trends' window-wide 0-100 rescaling
+                            base = float(pit.iloc[-4])
+                            f["gtrends_momentum"] = float(pit.iloc[-1] / base - 1.0) if base > 0 else 0.0
 
             # Polymarket secondary (Window B only)
             if polymarket is not None and not polymarket.empty and "polymarket_event_prob" in self.enabled_secondary:

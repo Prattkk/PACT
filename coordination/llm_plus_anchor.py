@@ -34,8 +34,8 @@ class LLMPlusAnchorProtocol(CoordinationProtocol):
                 continue
             try:
                 decisions.append(agent.run(as_of))
-            except Exception:
-                pass
+            except Exception as e:
+                self._record_failure(name, e)
 
         final: list[InstrumentView] = []
         for sym in self.universe:
@@ -85,7 +85,8 @@ class LLMPlusAnchorProtocol(CoordinationProtocol):
                         rationale=str(obj.get("rationale", "")),
                     )
                 )
-            except Exception:
+            except Exception as e:
+                self._record_failure("llm_refiner", e)
                 final.append(anchor_v)
 
         return CoordinationResult(

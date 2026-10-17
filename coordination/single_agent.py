@@ -27,7 +27,8 @@ class SingleAgentProtocol(CoordinationProtocol):
         for name, agent in self.agents.items():
             try:
                 all_factors[name] = agent.extract_factors(as_of)
-            except Exception:
+            except Exception as e:
+                self._record_failure(name, e)
                 all_factors[name] = {}
 
         # Single LLM call combining everything. In offline mode (no API key),
@@ -54,7 +55,8 @@ class SingleAgentProtocol(CoordinationProtocol):
                 )
                 parsed = _safe_parse_views(resp.text, self.universe)
                 views = parsed
-            except Exception:
+            except Exception as e:
+                self._record_failure("llm_monolith", e)
                 views = [
                     InstrumentView(instrument=s, direction=0, conviction=0.0, horizon="1w")
                     for s in self.universe

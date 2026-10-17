@@ -30,8 +30,8 @@ class DebateProtocol(CoordinationProtocol):
                 continue
             try:
                 decisions.append(agent.run(as_of))
-            except Exception:
-                pass
+            except Exception as e:
+                self._record_failure(name, e)
 
         final: list[InstrumentView] = []
         for sym in self.universe:
@@ -87,7 +87,8 @@ class DebateProtocol(CoordinationProtocol):
                         rationale=str(obj.get("rationale", "")),
                     )
                 )
-            except Exception:
+            except Exception as e:
+                self._record_failure("llm_adjudicator", e)
                 final.append(
                     InstrumentView(instrument=sym, direction=0, conviction=0.0, horizon="1w")
                 )

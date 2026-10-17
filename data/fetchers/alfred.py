@@ -1,6 +1,18 @@
 """ALFRED (vintage FRED) — point-in-time macro series (spec §3.2, §7).
 
-Hard rule per spec: return first-release values only — never revised.
+Hard rule per spec: return first-release values only — never revised —
+and only once they have been *published*. `first_release(sid, start, as_of)`
+returns observations whose first-release date is on or before `as_of`.
+
+(An earlier version filtered on the observation date instead of the release
+date, so a decision on 2023-02-03 could see January CPI, first published on
+2023-02-14, and a decision in November could see the Q4 GDP observation,
+first published the following January.)
+
+Release dates come from ALFRED's `realtime_start` field when available. When
+they are not (cached payloads from older runs, or the fredapi fallback), a
+conservative publication lag per series is applied instead (see
+`CONSERVATIVE_RELEASE_LAG_DAYS`).
 
 Two-tier strategy:
 - Daily non-revised series (interest rates, FX): values aren't revised, so
@@ -48,6 +60,25 @@ REVISED_SERIES: frozenset[str] = frozenset(
 )
 
 
+# Conservative lag from observation date to first publication, in calendar
+# days, used only when ALFRED's realtime_start is unavailable. FRED dates
+# monthly observations at the first of the month and quarterly ones at the
+# first day of the quarter.
+CONSERVATIVE_RELEASE_LAG_DAYS: dict[str, int] = {
+    "GDP": 125,        # advance estimate ~4 weeks after quarter end
+    "CPIAUCSL": 46,    # mid-following month
+    "UNRATE": 38,      # first Friday of the following month
+    "INDPRO": 48,      # mid-following month
+}
+DAILY_RELEASE_LAG_DAYS = 1  # H.15 / daily series: published the next business day
+
+
+def release_dates_for(series_id: str, obs_index: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Conservative first-publication dates for observations without realtime_start."""
+    lag = CONSERVATIVE_RELEASE_LAG_DAYS.get(series_id, DAILY_RELEASE_LAG_DAYS)
+    return pd.DatetimeIndex(obs_index) + pd.Timedelta(days=lag)
+
+
 def _client(api_key: str | None = None) -> Fred:
     key = api_key or os.environ.get("FRED_API_KEY")
     if not key:
@@ -90,12 +121,13 @@ def _rest_first_release(series_id: str, start: date, end: date) -> pd.Series:
         if v in (".", "", None):
             continue
         try:
-            rows.append((pd.Timestamp(o["date"]), float(v)))
+            rows.append((pd.Timestamp(o["date"]), float(v), pd.Timestamp(o.get("realtime_start", o["date"]))))
         except (ValueError, KeyError):
             continue
     if not rows:
         return pd.Series(dtype=float, name=series_id)
-    s = pd.Series({d: v for d, v in rows}, name=series_id).sort_index()
+    s = pd.Series({d: v for d, v, _ in rows}, name=series_id).sort_index()
+    s.attrs["release"] = pd.Series({d: r for d, _, r in rows}).sort_index()
     return s
 
 
@@ -105,40 +137,57 @@ def first_release(
     end: date,
     api_key: str | None = None,
 ) -> pd.Series:
-    """Return point-in-time observations of a FRED series.
+    """Point-in-time first-release observations of a FRED series.
 
-    For non-revised daily series, this is exactly first-release.
-    For revised series, attempts ALFRED REST `output_type=4`; falls back to
-    fredapi's `get_series` (latest revision) on failure with a warning.
+    Returns observations dated on/after `start` whose first-release date is
+    on/before `end` (pass the decision date as `end`). The returned Series
+    carries the release dates in `.attrs["release"]`.
 
-    Cache strategy: looks for an exact-key cache hit first; if absent, scans
-    the namespace for a wider already-cached range covering [start, end] and
-    serves the slice. This makes rolling-window callers (every rebalance has
-    a different start) hit cache after the first call.
+    Cache strategy: exact-key hit, then the narrowest wider cached range,
+    then a network fetch. Ranges are keyed on observation dates; the fetch
+    extends the observation window to `end` and filtering by release date
+    happens after the cache lookup, so cached data can never leak.
     """
-    # Exact hit
     params = {"series_id": series_id, "start": start, "end": end, "kind": "first_release"}
     cached = cache_read(NAMESPACE, params)
     if cached is not None:
-        log.debug("alfred cache hit series=%s start=%s end=%s", series_id, start, end)
-        return _payload_to_series(cached["payload"], series_id)
+        s = _payload_to_series(cached["payload"], series_id)
+    else:
+        wider = _find_wider_cache(series_id, start, end)
+        if wider is not None:
+            s = wider
+        else:
+            log.info("alfred fetch series=%s start=%s end=%s", series_id, start, end)
+            s = _fetch_uncached(series_id, start, end, api_key=api_key)
+            rel = s.attrs.get("release")
+            cache_write(
+                NAMESPACE,
+                params,
+                {
+                    "index": [pd.Timestamp(d).isoformat() for d in s.index],
+                    "values": [float(v) for v in s.values],
+                    "release": [pd.Timestamp(d).isoformat() for d in rel.reindex(s.index)]
+                    if rel is not None else None,
+                },
+            )
+    return _point_in_time(s, series_id, start, end)
 
-    # Wider-window cache scan (eliminates rolling-window cache misses)
-    wider = _find_wider_cache(series_id, start, end)
-    if wider is not None:
-        log.debug("alfred wider-window cache hit series=%s start=%s end=%s", series_id, start, end)
-        return _slice_by_date(wider, start, end)
 
-    log.info("alfred fetch series=%s start=%s end=%s", series_id, start, end)
-    s = _fetch_uncached(series_id, start, end, api_key=api_key)
-
-    cache_write(
-        NAMESPACE,
-        params,
-        {"index": [pd.Timestamp(d).isoformat() for d in s.index], "values": [float(v) for v in s.values]},
-    )
-    log.info("alfred fetched series=%s rows=%d", series_id, len(s))
-    return s
+def _point_in_time(s: pd.Series, series_id: str, start: date, end: date) -> pd.Series:
+    s = s.copy()
+    s.index = pd.to_datetime(s.index)
+    rel = s.attrs.get("release")
+    if rel is None or len(rel) == 0:
+        rel = pd.Series(release_dates_for(series_id, s.index), index=s.index)
+    else:
+        rel = pd.Series(pd.to_datetime(rel.reindex(s.index).values), index=s.index)
+        missing = rel.isna()
+        if missing.any():
+            rel[missing] = release_dates_for(series_id, s.index[missing])
+    keep = (s.index >= pd.Timestamp(start)) & (rel.values <= pd.Timestamp(end))
+    out = s[keep]
+    out.attrs["release"] = rel[keep]
+    return out
 
 
 def _fetch_uncached(
@@ -174,7 +223,10 @@ def _fetch_uncached(
             observation_end=end.isoformat(),
         )
 
+    rel = s.attrs.get("release")
     s = s.dropna()
+    if rel is not None:
+        s.attrs["release"] = rel.reindex(s.index)
     s.name = series_id
     return s
 
@@ -228,11 +280,15 @@ def _find_wider_cache(series_id: str, start: date, end: date) -> pd.Series | Non
 
 
 def _payload_to_series(payload: dict, series_id: str) -> pd.Series:
-    return pd.Series(
+    s = pd.Series(
         data=payload["values"],
         index=pd.to_datetime(payload["index"]),
         name=series_id,
     )
+    rel = payload.get("release")
+    if rel:
+        s.attrs["release"] = pd.Series(pd.to_datetime(rel), index=s.index)
+    return s
 
 
 def _slice_by_date(s: pd.Series, start: date, end: date) -> pd.Series:

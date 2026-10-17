@@ -40,8 +40,8 @@ class HierarchicalProtocol(CoordinationProtocol):
         for a in specialists:
             try:
                 round1.append(a.run(as_of))
-            except Exception:
-                pass
+            except Exception as e:
+                self._record_failure(getattr(a, "name", "specialist"), e)
 
         # Manager veto: drop low-confidence views before aggregation
         kept = [

@@ -138,15 +138,24 @@ def cell_dir(window: str, regime: str, protocol: str) -> Path:
     return d
 
 
+SCHEMA_VERSION = 2  # v2: holdings simulator, excess returns, return-based BTC splice
+
+
 def save_backtest_result(out_dir: Path, result: BacktestResult, meta_extra: dict) -> None:
-    """Persist a backtest cell's artifacts: equity, returns, turnover, weights, meta."""
+    """Persist a backtest cell: equity, total/excess/gross-excess returns, turnover, weights, meta."""
     result.equity.to_frame("equity").to_parquet(out_dir / "equity.parquet")
     result.returns.to_frame("returns").to_parquet(out_dir / "returns.parquet")
+    if result.excess_returns is not None:
+        result.excess_returns.to_frame("excess_returns").to_parquet(out_dir / "excess_returns.parquet")
+    if result.gross_excess_returns is not None:
+        result.gross_excess_returns.to_frame("gross_excess_returns").to_parquet(
+            out_dir / "gross_excess_returns.parquet")
     result.turnover.to_frame("turnover").to_parquet(out_dir / "turnover.parquet")
     result.weights.to_parquet(out_dir / "weights.parquet")
     meta = {
         **{k: _jsonable(v) for k, v in result.metadata.items()},
         **meta_extra,
+        "schema_version": SCHEMA_VERSION,
         "saved_at_utc": datetime.now(timezone.utc).isoformat(),
     }
     with (out_dir / "metadata.json").open("w") as f:
@@ -154,13 +163,22 @@ def save_backtest_result(out_dir: Path, result: BacktestResult, meta_extra: dict
 
 
 def load_backtest_result(out_dir: Path) -> dict:
-    """Load a saved cell. Returns dict with series + metadata."""
+    """Load a saved cell. Raises if the cell predates the v2 accounting fixes."""
+    meta = json.loads((out_dir / "metadata.json").read_text())
+    if int(meta.get("schema_version", 1)) < SCHEMA_VERSION:
+        raise ValueError(
+            f"{out_dir.name} was produced by the pre-fix engine (schema v1); rerun it. "
+            "v1 cells contain the BTC splice and accounting bugs."
+        )
     return {
         "equity": pd.read_parquet(out_dir / "equity.parquet")["equity"],
         "returns": pd.read_parquet(out_dir / "returns.parquet")["returns"],
+        "excess_returns": pd.read_parquet(out_dir / "excess_returns.parquet")["excess_returns"],
+        "gross_excess_returns": pd.read_parquet(
+            out_dir / "gross_excess_returns.parquet")["gross_excess_returns"],
         "turnover": pd.read_parquet(out_dir / "turnover.parquet")["turnover"],
         "weights": pd.read_parquet(out_dir / "weights.parquet"),
-        "metadata": json.loads((out_dir / "metadata.json").read_text()),
+        "metadata": meta,
     }
 
 

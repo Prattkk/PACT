@@ -11,12 +11,19 @@ Every LLM-driven agent follows the same pattern:
 from __future__ import annotations
 
 import json
+from collections import Counter
 from typing import Any
 
 from agents.base_agent import Horizon, InstrumentView
 from pact_logging import get_logger
 
 log = get_logger(__name__)
+
+# Process-wide tallies of LLM fallbacks, keyed "agent:reason". The engine
+# snapshots these before/after a backtest and stores the difference in the
+# cell metadata, so the share of decisions that silently fell back to the
+# deterministic anchor is reported rather than hidden.
+LLM_STATS: Counter[str] = Counter()
 
 
 def parse_view_list(
@@ -74,6 +81,7 @@ def views_from_llm_or_anchor(
     """
     if llm is None:
         return anchor_views
+    LLM_STATS[f"{agent_name}:calls"] += 1
     try:
         resp = llm.complete(
             system=system_prompt,
@@ -81,15 +89,20 @@ def views_from_llm_or_anchor(
             max_tokens=max_tokens,
         )
     except Exception as e:
+        LLM_STATS[f"{agent_name}:call_failed"] += 1
         log.warning("agent=%s llm.complete failed (%s); falling back to anchor", agent_name, type(e).__name__)
         return anchor_views
 
     parsed = parse_view_list(resp.text, universe, default_horizon)
     if not parsed:
+        LLM_STATS[f"{agent_name}:unparseable"] += 1
         log.warning("agent=%s llm output unparseable; falling back to anchor", agent_name)
         return anchor_views
 
     seen = {v.instrument for v in parsed}
+    n_missing = sum(1 for s in universe if s.upper() not in seen)
+    if n_missing:
+        LLM_STATS[f"{agent_name}:symbols_filled_from_anchor"] += n_missing
     by_anchor = {v.instrument: v for v in anchor_views}
     for sym in universe:
         s = sym.upper()

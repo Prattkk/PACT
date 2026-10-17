@@ -4,7 +4,12 @@ Inputs: ALFRED first-release macro series + FOMC text.
 Output: regime quadrant (growth × inflation) + per-instrument view.
 
 Two-stage decide():
-1. Classify regime (growth × inflation) from 3-month deltas of GDP and CPI.
+1. Classify regime (growth × inflation) from the 3-month change in the
+   year-over-year growth rate of industrial production (growth) and of CPI
+   (inflation), computed from first-release, already-published values.
+   (An earlier version used the 3-month change in the *levels* of nominal GDP
+   and CPI, which are positive in almost every period, so the regime was
+   effectively constant at growth-up x inflation-up.)
 2. Apply a coarse `_macro_priors` table → anchor views.
 3. If an LLM is available, refine those anchor views; else return the anchor.
 """
@@ -46,11 +51,11 @@ class MacroRegimeAgent(BaseAgent):
         if self.cell_window and not self._prefetched:
             # Prime ALFRED cache with the full cell window — eliminates per-rebalance
             # network calls for every HEADLINE series.
-            cell_start = self.cell_window[0] - timedelta(days=400)
+            cell_start = self.cell_window[0] - timedelta(days=560)
             cell_end = self.cell_window[1]
             prefetch_window(HEADLINE_SERIES.values(), cell_start, cell_end)
             self._prefetched = True
-        start = as_of - timedelta(days=400)
+        start = as_of - timedelta(days=560)   # >= 15 published months for YoY changes
         macro: dict[str, float] = {}
         for label, sid in HEADLINE_SERIES.items():
             try:
@@ -60,6 +65,11 @@ class MacroRegimeAgent(BaseAgent):
             except Exception:
                 macro[label] = float("nan")
                 macro[f"{label}_chg_3m"] = float("nan")
+                continue
+            if label in ("cpi_yoy", "industrial_production"):
+                yoy = _yoy_rate_monthly(s)
+                macro[f"{label}_yoy_rate"] = float(yoy.iloc[-1]) if len(yoy) else float("nan")
+                macro[f"{label}_yoy_rate_chg_3m"] = _change_over_days(yoy, 90) if len(yoy) else float("nan")
         return {sym: dict(macro) for sym in self.universe}
 
     def decide(
@@ -105,10 +115,12 @@ class MacroRegimeAgent(BaseAgent):
 
     @staticmethod
     def _classify_regime(m: dict[str, float]) -> str:
-        gdp_chg = m.get("gdp_chg_3m", 0.0) or 0.0
-        cpi_chg = m.get("cpi_yoy_chg_3m", 0.0) or 0.0
-        growth_up = gdp_chg > 0
-        infl_up = cpi_chg > 0
+        def _ok(x):
+            return x is not None and x == x  # not NaN
+        g = m.get("industrial_production_yoy_rate_chg_3m")
+        i = m.get("cpi_yoy_yoy_rate_chg_3m")
+        growth_up = (g > 0) if _ok(g) else ((m.get("gdp_chg_3m") or 0.0) > 0)
+        infl_up = (i > 0) if _ok(i) else False
         return f"{'growth_up' if growth_up else 'growth_down'}_x_{'infl_up' if infl_up else 'infl_down'}"
 
 
@@ -147,3 +159,10 @@ def _change_over_days(s: pd.Series, days: int) -> float:
         return float("nan")
     prior_val = float(s.values[prior_mask][-1])
     return float(s.iloc[-1] - prior_val)
+
+
+def _yoy_rate_monthly(s: pd.Series) -> pd.Series:
+    """Year-over-year percent change of a monthly level series (12 observations back)."""
+    s = s.dropna()
+    s = s[~s.index.duplicated(keep="last")]
+    return (s / s.shift(12) - 1.0).dropna() * 100.0

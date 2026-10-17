@@ -106,7 +106,7 @@ def _backtest_with_subset(
             nulled[name] = NullAgent(replaces_name=name, universe=universe)
     proto = build_protocol(protocol_key, nulled, llm, universe)
     result = run_backtest(proto, universe, bt_cfg)
-    return result.returns
+    return result.excess_returns
 
 
 def _make_runner(cell_meta: dict, offline_llm: bool):
@@ -178,6 +178,7 @@ def loo_attribution(cell_id: str, offline_llm: bool = False) -> list[dict]:
             "sharpe_full": full_sharpe,
             "sharpe_without": sub_sharpe,
             "sharpe_delta": delta,
+            "schema_version": 2,
         })
     return rows
 
