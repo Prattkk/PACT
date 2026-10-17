@@ -4,12 +4,12 @@ Drop-in replacement for `GPT4oClient` (same `complete` signature and the same
 SHA-256 prompt cache in `llm/base.py`).
 
 Reproducibility notes (report these in the paper):
-- The model ID is pinned (`claude-opus-5-5` by default; override with
+- The model ID is pinned (`claude-sonnet-5-5` by default; override with
   `PACT_CLAUDE_MODEL`). The API's returned `model` and message `id` are
   stored with every cached response.
 - The Messages API exposes no temperature, top-p or seed for this model, so
-  sampling is the API default; thinking is adaptive at effort "low" (this
-  model does not accept thinking=disabled).
+  sampling is the API default; thinking is off for Sonnet (between_tools,
+  no tools) and adaptive at effort "low" for Opus, which cannot disable it.
   The cache key therefore uses temperature=None and seed=None, and replaying
   from the cache is what makes a rerun exact.
 - Every training-data cutoff of current Claude models is after 2024, so
@@ -34,10 +34,22 @@ from pact_logging import get_logger
 
 log = get_logger(__name__)
 
-DEFAULT_MODEL = os.environ.get("PACT_CLAUDE_MODEL", "claude-opus-5-5")
-# Opus 5.5 does not accept thinking=disabled; pin adaptive thinking at the
-# lowest effort so answers stay short and the configuration is fixed.
-THINKING = {"type": "adaptive"}
+DEFAULT_MODEL = os.environ.get("PACT_CLAUDE_MODEL", "claude-sonnet-5-5")
+
+
+def thinking_config(model: str) -> dict:
+    """Thinking off where the model allows it.
+
+    Sonnet 5.5 turns thinking off with {"type": "between_tools"} (no tools are
+    used here, so no thinking happens); Opus 5.5 cannot turn it off, so it
+    gets adaptive thinking at the lowest effort.
+    """
+    override = os.environ.get("PACT_CLAUDE_THINKING")
+    if override:
+        return {"type": override}
+    return {"type": "adaptive"} if "opus" in model else {"type": "between_tools"}
+
+
 EFFORT = os.environ.get("PACT_CLAUDE_EFFORT", "low")
 # Thinking tokens share max_tokens, so short requests get a floor; billing is
 # per token used, and prompts still ask for short answers.
@@ -74,7 +86,7 @@ class ClaudeClient(LLMClient):
             system=system,
             messages=[{"role": "user", "content": user}],
             max_tokens=max(max_tokens, MIN_MAX_TOKENS),
-            thinking=THINKING,
+            thinking=thinking_config(self.model),
             output_config={"effort": EFFORT},
         )
 
@@ -88,7 +100,7 @@ class ClaudeClient(LLMClient):
         max_tokens: int = 2048,
     ) -> LLMResponse:
         # temperature is accepted for interface parity but cannot be sent
-        canonical = canonicalize_prompt(system=system, user=user, model=f"{self.model}|effort={EFFORT}",
+        canonical = canonicalize_prompt(system=system, user=user, model=f"{self.model}|effort={EFFORT}|thinking={thinking_config(self.model)['type']}",
                                         temperature=None, seed=None)
         h = prompt_hash(canonical)
 
@@ -113,7 +125,7 @@ class ClaudeClient(LLMClient):
             "usage": usage,
             "finish_reason": getattr(msg, "stop_reason", None),
             "sampling": "API default (no temperature parameter)",
-            "thinking": THINKING["type"],
+            "thinking": thinking_config(self.model)["type"],
             "effort": EFFORT,
             "max_tokens_sent": max(max_tokens, MIN_MAX_TOKENS),
             "latency_s": round(time.monotonic() - t0, 3),

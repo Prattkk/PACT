@@ -121,9 +121,10 @@ pytest -q
 
 - All LLM responses cached as JSON keyed by SHA-256 of the canonicalized
   prompt (`llm/base.py::canonicalize_prompt`).
-- Frontier model is pinned to `claude-opus-5-5` (override with `PACT_CLAUDE_MODEL`);
-  `temperature=0` (the Messages API has no seed), and the API's returned model ID,
-  message ID and token usage are recorded in every cache entry. The old GPT-4o path
+- Frontier model is pinned to `claude-sonnet-5-5` (override with `PACT_CLAUDE_MODEL`)
+  with extended thinking off; the API exposes no temperature or seed for this model.
+  The API's returned model ID, message ID and token usage are recorded in every
+  cache entry. `python -m scripts.prewarm_llm_cache` fills the cache in parallel. The old GPT-4o path
   (`gpt-4o-2024-11-20`, seed 42) is still available with `PACT_FRONTIER=gpt4o`.
 - ChronoGPT yearly checkpoints (`manelalab/chrono-gpt-instruct-v1-YYYY1231`)
   are pinned by HF commit SHA in `llm/chronogpt_revisions.py` for every year
