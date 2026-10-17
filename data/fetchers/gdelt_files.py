@@ -37,7 +37,7 @@ log = get_logger(__name__)
 BASE_URL = "https://data.gdeltproject.org/gkg/{d}.gkg.csv.zip"
 DAY_CACHE = Path(__file__).resolve().parent.parent / "cache" / "gdelt_days"
 DAY_CACHE.mkdir(parents=True, exist_ok=True)
-FILTER_VERSION = 1  # bump if INSTRUMENT_FILTERS or the aggregation changes
+FILTER_VERSION = 2  # bump if INSTRUMENT_FILTERS or the aggregation changes
 
 
 def aggregate_rows(lines: Iterable[str], filters: dict[str, dict[str, list[str]]]) -> dict[str, float]:

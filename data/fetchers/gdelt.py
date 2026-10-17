@@ -41,43 +41,45 @@ GDELT_V2_START = date(2015, 2, 18)
 
 # Theme/keyword filters per tradeable instrument.
 # Themes: GDELT GKG taxonomy (https://blog.gdeltproject.org/the-gdelt-vision-thematic-categories/).
-# Keywords: case-insensitive substring matched against DocumentIdentifier (URL).
+# Keywords: case-insensitive substring matched against the article URL, so they
+# are written as URL slugs (hyphens): the original space-separated phrases
+# never occur in URLs and left EEM with no matches at all.
 INSTRUMENT_FILTERS: dict[str, dict[str, list[str]]] = {
     "SPY": {
         "themes": ["ECON_STOCKMARKET", "USPOL", "ECON_INFLATION", "ECON_RECESSION"],
-        "keywords": ["s%26p 500", "stock market"],
+        "keywords": ["s-p-500", "sp-500", "stock-market"],
     },
     "QQQ": {
         "themes": ["ECON_STOCKMARKET", "TECH"],
-        "keywords": ["nasdaq", "tech stocks"],
+        "keywords": ["nasdaq", "tech-stocks"],
     },
     "IWM": {
         "themes": ["ECON_STOCKMARKET", "SMALLBUSINESS"],
-        "keywords": ["russell 2000", "small cap"],
+        "keywords": ["russell-2000", "small-cap"],
     },
     "IEF": {
         "themes": ["ECON_INTEREST_RATES", "ECON_BONDS"],
-        "keywords": ["10-year treasury", "treasury bond"],
+        "keywords": ["10-year-treasury", "treasury-yield", "treasury-bond"],
     },
     "SHY": {
         "themes": ["ECON_INTEREST_RATES"],
-        "keywords": ["2-year treasury", "fed funds"],
+        "keywords": ["2-year-treasury", "fed-funds"],
     },
     "GLD": {
         "themes": ["ECON_PRICES", "ECON_INFLATION"],
-        "keywords": ["gold price", "gold market"],
+        "keywords": ["gold-price", "gold-market"],
     },
     "USO": {
         "themes": ["ECON_PETROLEUM", "ENV_OIL"],
-        "keywords": ["crude oil", "wti", "oil price", "opec"],
+        "keywords": ["crude-oil", "oil-price", "opec"],
     },
     "UUP": {
         "themes": ["ECON_CURRENCY"],
-        "keywords": ["dollar index", "dxy", "u.s. dollar"],
+        "keywords": ["dollar-index", "dxy", "us-dollar"],
     },
     "EEM": {
         "themes": ["ECON_EMERGINGMARKET"],
-        "keywords": ["emerging markets"],
+        "keywords": ["emerging-market", "emerging-econom"],
     },
     "BTC": {
         "themes": ["TECH_CRYPTOCURRENCY", "ECON_BITCOIN"],
