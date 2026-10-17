@@ -29,6 +29,11 @@ earlier engine are rejected by `load_backtest_result` and must be rerun:
 - Wikipedia uses previous-day data; Google Trends uses completed weeks only.
 - The Ledoit-Wolf Sharpe test uses the correct HAC covariance matrix.
 - Every swallowed agent/LLM failure is counted in cell metadata.
+- The independent ensemble uses the manager's conviction-weighted vote, so the
+  pipeline and hierarchical protocols each differ from it by one mechanism.
+- EIA/NOAA values are used only after publication; the Polymarket variant is
+  removed from the alt-data ablation and equity-index XBRL aggregation is
+  disabled until they are fixed and validated.
 
 `scripts/run_pitfall_audit.py` quantifies the effect of each fix on the
 deterministic baseline (prices only, no API keys).

@@ -540,7 +540,7 @@ def _plot_cost(path: Path, tc_table: dict, bench_tc: dict) -> None:
 
     plt.rcParams.update({"font.size": 7.5, "font.family": "serif", "axes.spines.top": False,
                          "axes.spines.right": False})
-    fig, ax = plt.subplots(figsize=(4.7, 2.75))
+    fig, ax = plt.subplots(figsize=(4.7, 2.45))
     x = list(TC_GRID)
     palette = {"independent_ensemble": "#1b6ca8", "sequential_pipeline": "#c0392b", "hierarchical": "#e67e22",
                "debate": "#8e44ad", "llm_plus_anchor": "#16a085", "single_agent": "#7f8c8d"}
