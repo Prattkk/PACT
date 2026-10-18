@@ -64,6 +64,16 @@ def parse_json_object(text: str) -> dict | None:
     return None
 
 
+def _log_failure(component: str, exc: Exception) -> None:
+    import os
+
+    path = os.environ.get("PACT_FAILURE_LOG")
+    if path:
+        with open(path, "a") as fh:
+            fh.write(json.dumps({"protocol": "agent", "component": component,
+                                 "type": type(exc).__name__, "msg": str(exc)[:300]}) + "\n")
+
+
 def tally(component: str, outcome: str, n: int = 1) -> None:
     """Record an LLM call outcome: 'calls', 'call_failed', 'unparseable', 'symbols_filled_from_anchor'."""
     LLM_STATS[f"{component}:{outcome}"] += n
@@ -113,6 +123,7 @@ def views_from_llm_or_anchor(
     except Exception as e:
         LLM_STATS[f"{agent_name}:call_failed"] += 1
         log.warning("agent=%s llm.complete failed (%s); falling back to anchor", agent_name, type(e).__name__)
+        _log_failure(agent_name, e)
         return anchor_views
 
     parsed = parse_view_list(resp.text, universe, default_horizon)

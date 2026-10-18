@@ -149,7 +149,7 @@ def load_cell(cell_id: str, missing: list[str]) -> dict | None:
     stats = meta.get("llm_stats") or {}
     n_calls = sum(v for k, v in stats.items() if k.endswith(":calls"))
     n_fail = max(int(meta.get("agent_failure_total", 0)),
-                 sum(v for k, v in stats.items() if k.endswith(":call_failed")))
+                 sum(v for k, v in stats.items() if k.endswith((":call_failed", ":unparseable"))))
     if n_calls and n_fail / n_calls > MAX_FAILURE_RATE:
         log.warning("%s: %d of %d LLM calls failed; treated as missing", cell_id, n_fail, n_calls)
         missing.append(f"{cell_id} ({n_fail}/{n_calls} LLM calls failed; rerun)")
