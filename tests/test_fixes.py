@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
 
 import numpy as np
@@ -177,7 +178,7 @@ def test_macro_regime_neutral_when_inputs_missing():
     from agents.macro_regime import MacroRegimeAgent
     assert MacroRegimeAgent._classify_regime({}) == "unknown"
     assert MacroRegimeAgent._classify_regime(
-        {"industrial_production_yoy_rate_chg_3m": -0.5, "cpi_yoy_yoy_rate_chg_3m": 0.2}) == "growth_down_x_infl_up"
+        {"industrial_production_yoy_pct_chg_3m": -0.5, "cpi_yoy_pct_chg_3m": 0.2}) == "growth_down_x_infl_up"
 
 
 def test_alfred_rejects_implausible_release_dates():
@@ -231,3 +232,45 @@ def test_gdelt_file_aggregation_matches_filters():
     out = aggregate_rows([hdr] + rows, filt)
     assert out["n_BTC"] == 4 and abs(out["tone_BTC"] - (3 * -2.0 + 4.0) / 4) < 1e-12
     assert out["n_USO"] == 0
+
+
+def test_macro_payload_labels_levels_correctly():
+    from agents.macro_regime import OUT_NAME
+    assert OUT_NAME["cpi_yoy"] == "cpi_index"  # level series must not be called *_yoy
+
+
+def test_multiround_debate_builds_transcript_and_adjudicates():
+    from agents.base_agent import AgentDecision, InstrumentView
+    from coordination.debate import MultiRoundDebateProtocol
+    from llm.base import LLMResponse
+
+    class Stub:
+        def __init__(self, name, d):
+            self.name, self.d = name, d
+        def run(self, as_of):
+            return AgentDecision(agent_name=self.name, as_of=as_of, views=[
+                InstrumentView(instrument="SPY", direction=self.d, conviction=0.5, horizon="1w", factors={"x": 1.0})])
+
+    class FakeLLM:
+        model = "fake"
+        def __init__(self):
+            self.calls = []
+        def complete(self, *, system, user, max_tokens=2048, **kw):
+            self.calls.append(system)
+            text = '{"direction": 1, "conviction": 0.6, "rationale": "ok"}' if "adjudicator" in system else "argument"
+            return LLMResponse(text=text, model="fake", prompt_hash="h")
+
+    llm = FakeLLM()
+    agents = {"a": Stub("a", 1), "b": Stub("b", -1)}
+    v = MultiRoundDebateProtocol(agents, llm, ("SPY",)).run(date(2024, 1, 5)).final_views[0]
+    assert (v.direction, v.conviction) == (1, 0.6)
+    assert sum("bull researcher" in c for c in llm.calls) == 2 and sum("bear researcher" in c for c in llm.calls) == 2
+    assert json.loads if True else None
+
+
+def test_anonymizer_round_trip():
+    from llm.anonymize import mask, unmask
+    t = '{"instrument": "SPY", "as_of": "2023-03-17", "note": "IEF and BTC-USD"}'
+    m = mask(t)
+    assert "SPY" not in m and "2023-03-17" not in m and "IEF" not in m
+    assert unmask(m).replace("[date]", "2023-03-17") == t

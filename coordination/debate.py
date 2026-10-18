@@ -60,25 +60,26 @@ class DebateProtocol(CoordinationProtocol):
                 )
                 continue
 
+            transcript = self._debate(sym, bull, bear) if (self.rounds > 1 and bull and bear) else None
             tally("debate_adjudicator", "calls")
             try:
+                payload = {
+                    "instrument": sym,
+                    "as_of": as_of.isoformat(),
+                    "bull": [{"agent": n, "direction": v.direction, "conviction": v.conviction,
+                              "factors": v.factors} for n, v in bull],
+                    "bear": [{"agent": n, "direction": v.direction, "conviction": v.conviction,
+                              "factors": v.factors} for n, v in bear],
+                }
+                if transcript:
+                    payload["debate_transcript"] = transcript
                 resp = self.llm.complete(
                     system=(
                         "You are an adjudicator between bull and bear analysts on one "
                         "instrument. Read both sides' factors, then emit one JSON object: "
                         '{"direction": -1|0|1, "conviction": 0..1, "rationale": str}.'
                     ),
-                    user=json.dumps(
-                        {
-                            "instrument": sym,
-                            "as_of": as_of.isoformat(),
-                            "bull": [{"agent": n, "direction": v.direction, "conviction": v.conviction,
-                                      "factors": v.factors} for n, v in bull],
-                            "bear": [{"agent": n, "direction": v.direction, "conviction": v.conviction,
-                                      "factors": v.factors} for n, v in bear],
-                        },
-                        default=float,
-                    ),
+                    user=json.dumps(payload, default=float),
                     max_tokens=400,
                 )
                 obj = parse_json_object(resp.text)
@@ -106,3 +107,46 @@ class DebateProtocol(CoordinationProtocol):
             final_views=final,
             per_agent_decisions=decisions,
         )
+
+
+    def _debate(self, sym: str, bull: list, bear: list) -> list[dict]:
+        """Multi-round bull/bear exchange written by LLM debaters.
+
+        Each round the bull researcher argues for a long position and the bear
+        researcher for a short one, each seeing both sides' factors and the
+        transcript so far. The adjudicator then reads the transcript.
+        """
+        facts = {
+            "instrument": sym,
+            "bull_evidence": [{"agent": n, "conviction": v.conviction, "factors": v.factors} for n, v in bull],
+            "bear_evidence": [{"agent": n, "conviction": v.conviction, "factors": v.factors} for n, v in bear],
+        }
+        transcript: list[dict] = []
+        for rnd in range(1, self.rounds + 1):
+            for side, stance in (("bull", "long"), ("bear", "short")):
+                tally(f"debate_{side}", "calls")
+                try:
+                    resp = self.llm.complete(
+                        system=(
+                            f"You are the {side} researcher in a structured debate on one instrument. "
+                            f"Argue for a {stance} position over the next week using only the evidence given, "
+                            "and rebut the other side's latest argument if there is one. "
+                            "At most 120 words. Do not invent data."
+                        ),
+                        user=json.dumps({**facts, "round": rnd, "transcript": transcript}, default=float),
+                        max_tokens=300,
+                    )
+                    transcript.append({"round": rnd, "side": side, "argument": resp.text.strip()})
+                except Exception as e:
+                    self._record_failure(f"debate_{side}", e)
+                    tally(f"debate_{side}", "call_failed")
+        return transcript
+
+
+class MultiRoundDebateProtocol(DebateProtocol):
+    """Debate with LLM-written bull and bear arguments over two rounds."""
+
+    name = "debate_multiround"
+
+    def __init__(self, agents, llm_client, universe: tuple[str, ...], rounds: int = 2):
+        super().__init__(agents, llm_client, universe, rounds=rounds)

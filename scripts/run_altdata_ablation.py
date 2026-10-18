@@ -57,7 +57,7 @@ def _cell_dir(variant: str, window: str, regime: str, protocol: str) -> Path:
 def main() -> None:
     p = argparse.ArgumentParser(description="5-variant alt-data ablation (spec §6.6)")
     p.add_argument("--protocols", nargs="+", default=["sequential_pipeline"])
-    p.add_argument("--regime", choices=["none", "open_source", "frontier"], default="none")
+    p.add_argument("--regime", choices=["none", "open_source", "frontier", "frontier_r2", "frontier_r3", "frontier_anon", "frontier_haiku"], default="none")
     p.add_argument("--window", choices=["a", "b"], default="b")
     p.add_argument("--universe", nargs="*", default=None)
     p.add_argument("--variants", nargs="*", default=None,

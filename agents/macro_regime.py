@@ -26,12 +26,21 @@ from data.fetchers.alfred import HEADLINE_SERIES, first_release, prefetch_window
 
 SYSTEM_PROMPT = (
     "You are the Macro Regime Agent. Inputs are first-release ALFRED macro "
-    "series (level + 3-month change) and a per-instrument anchor view from a "
+    "series (level + 3-month change; rates and *_yoy_pct in percent, "
+    "cpi_index and industrial_production_index are index levels, "
+    "gdp_nominal_usd_bn in billions) and a per-instrument anchor view from a "
     "growth × inflation regime prior. Refine direction and conviction with the "
     "macro context. Never invent factors. Output strict JSON: a list of "
     '{"instrument": SYMBOL, "direction": -1|0|1, "conviction": 0..1, '
     '"horizon": "1q", "rationale": "<=240 chars cite which series drove it"}.'
 )
+
+
+# Names sent to the LLM. HEADLINE_SERIES keys are internal; "cpi_yoy" there is
+# the CPI *level* series, which an earlier version sent under that name (an
+# LLM read "cpi_yoy": 304 as 304% inflation).
+OUT_NAME = {"cpi_yoy": "cpi_index", "industrial_production": "industrial_production_index",
+            "gdp": "gdp_nominal_usd_bn"}
 
 
 class MacroRegimeAgent(BaseAgent):
@@ -58,18 +67,20 @@ class MacroRegimeAgent(BaseAgent):
         start = as_of - timedelta(days=560)   # >= 15 published months for YoY changes
         macro: dict[str, float] = {}
         for label, sid in HEADLINE_SERIES.items():
+            out = OUT_NAME.get(label, label)
             try:
                 s = first_release(sid, start, as_of)
-                macro[label] = float(s.iloc[-1]) if len(s) else float("nan")
-                macro[f"{label}_chg_3m"] = _change_over_days(s, 90)
+                macro[out] = float(s.iloc[-1]) if len(s) else float("nan")
+                macro[f"{out}_chg_3m"] = _change_over_days(s, 90)
             except Exception:
-                macro[label] = float("nan")
-                macro[f"{label}_chg_3m"] = float("nan")
+                macro[out] = float("nan")
+                macro[f"{out}_chg_3m"] = float("nan")
                 continue
             if label in ("cpi_yoy", "industrial_production"):
+                stem = "cpi" if label == "cpi_yoy" else "industrial_production"
                 yoy = _yoy_rate_monthly(s)
-                macro[f"{label}_yoy_rate"] = float(yoy.iloc[-1]) if len(yoy) else float("nan")
-                macro[f"{label}_yoy_rate_chg_3m"] = _change_over_days(yoy, 90) if len(yoy) else float("nan")
+                macro[f"{stem}_yoy_pct"] = float(yoy.iloc[-1]) if len(yoy) else float("nan")
+                macro[f"{stem}_yoy_pct_chg_3m"] = _change_over_days(yoy, 90) if len(yoy) else float("nan")
         return {sym: dict(macro) for sym in self.universe}
 
     def decide(
@@ -117,10 +128,10 @@ class MacroRegimeAgent(BaseAgent):
     def _classify_regime(m: dict[str, float]) -> str:
         def _ok(x):
             return x is not None and x == x  # not NaN
-        g = m.get("industrial_production_yoy_rate_chg_3m")
-        i = m.get("cpi_yoy_yoy_rate_chg_3m")
+        g = m.get("industrial_production_yoy_pct_chg_3m")
+        i = m.get("cpi_yoy_pct_chg_3m")
         if not _ok(g):
-            g = m.get("gdp_chg_3m")
+            g = m.get("gdp_nominal_usd_bn_chg_3m")
         if not (_ok(g) and _ok(i)):
             return "unknown"   # missing inputs -> neutral priors, never a spurious quadrant
         growth_up = g > 0

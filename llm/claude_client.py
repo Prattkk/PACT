@@ -41,13 +41,17 @@ def thinking_config(model: str) -> dict:
     """Thinking off where the model allows it.
 
     Sonnet 5.5 turns thinking off with {"type": "between_tools"} (no tools are
-    used here, so no thinking happens); Opus 5.5 cannot turn it off, so it
-    gets adaptive thinking at the lowest effort.
+    used here, so no thinking happens), Haiku 5.5 with {"type": "disabled"};
+    Opus 5.5 cannot turn it off, so it gets adaptive thinking at low effort.
     """
     override = os.environ.get("PACT_CLAUDE_THINKING")
     if override:
         return {"type": override}
-    return {"type": "adaptive"} if "opus" in model else {"type": "between_tools"}
+    if "opus" in model:
+        return {"type": "adaptive"}
+    if "haiku" in model:
+        return {"type": "disabled"}  # Haiku 5.5 rejects between_tools but accepts disabled
+    return {"type": "between_tools"}
 
 
 EFFORT = os.environ.get("PACT_CLAUDE_EFFORT", "low")
@@ -62,8 +66,12 @@ class ClaudeClient(LLMClient):
         model: str = DEFAULT_MODEL,
         api_key: str | None = None,
         offline: bool = False,
+        run_tag: str | None = None,
     ) -> None:
         self.model = model
+        # A run tag gives an independent sample of every response (separate
+        # cache entries); the API has no seed, so this is how repeats are drawn.
+        self.run_tag = run_tag
         self.offline = offline
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self._client = None
@@ -100,7 +108,8 @@ class ClaudeClient(LLMClient):
         max_tokens: int = 2048,
     ) -> LLMResponse:
         # temperature is accepted for interface parity but cannot be sent
-        canonical = canonicalize_prompt(system=system, user=user, model=f"{self.model}|effort={EFFORT}|thinking={thinking_config(self.model)['type']}",
+        canonical = canonicalize_prompt(system=system, user=user, model=f"{self.model}|effort={EFFORT}|thinking={thinking_config(self.model)['type']}"
+                                        + (f"|run={self.run_tag}" if self.run_tag else ""),
                                         temperature=None, seed=None)
         h = prompt_hash(canonical)
 

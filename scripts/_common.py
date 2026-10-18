@@ -50,7 +50,7 @@ def load_config(name: str) -> dict:
 
 
 # Protocols that need their own llm_client kwarg (separate from the agents' LLM).
-_PROTOCOLS_NEEDING_LLM = {"single_agent", "debate", "llm_plus_anchor"}
+_PROTOCOLS_NEEDING_LLM = {"single_agent", "debate", "debate_multiround", "llm_plus_anchor"}
 
 
 def build_agents(
@@ -104,6 +104,16 @@ def build_protocol(
     return cls(agents=agents, universe=universe)
 
 
+# Frontier variants: repeat samples (run_tag), identifier masking, second model.
+FRONTIER_REGIMES: dict[str, dict] = {
+    "frontier": {},
+    "frontier_r2": {"run_tag": "r2"},
+    "frontier_r3": {"run_tag": "r3"},
+    "frontier_anon": {"anonymize": True},
+    "frontier_haiku": {"model": "claude-haiku-5-5"},
+}
+
+
 def build_llm_client(regime: str, offline: bool = False, cutoff_year: int | None = None):
     """Build the LLM client for a regime, or None for `none` regime.
 
@@ -121,17 +131,24 @@ def build_llm_client(regime: str, offline: bool = False, cutoff_year: int | None
         if cutoff_year is None:
             return ChronoGPTClient(offline=offline)
         return ChronoGPTClient(cutoff_year=cutoff_year, offline=offline)
-    if regime == "frontier":
+    if regime in FRONTIER_REGIMES:
         # Default frontier model is Claude; set PACT_FRONTIER=gpt4o for the old GPT-4o path.
         import os
 
-        if os.environ.get("PACT_FRONTIER", "claude").lower() == "gpt4o":
+        if regime == "frontier" and os.environ.get("PACT_FRONTIER", "claude").lower() == "gpt4o":
             from llm.gpt4o_client import GPT4oClient
 
             return GPT4oClient(offline=offline)
-        from llm.claude_client import ClaudeClient
+        from llm.claude_client import DEFAULT_MODEL, ClaudeClient
 
-        return ClaudeClient(offline=offline)
+        cfg = FRONTIER_REGIMES[regime]
+        client = ClaudeClient(model=cfg.get("model", DEFAULT_MODEL), offline=offline,
+                              run_tag=cfg.get("run_tag"))
+        if cfg.get("anonymize"):
+            from llm.anonymize import AnonymizingClient
+
+            return AnonymizingClient(client)
+        return client
     raise ValueError(f"unknown regime: {regime}")
 
 
