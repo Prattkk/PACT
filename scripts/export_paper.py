@@ -50,6 +50,7 @@ from scripts._common import RAW_DIR, TABLES_DIR, load_backtest_result
 log = get_logger(__name__)
 
 WINDOW = "b"
+MAX_FAILURE_RATE = 0.01
 START, END = date(2022, 1, 1), date(2024, 12, 31)
 SPLIT = pd.Timestamp("2023-01-01")
 REGIMES = ("none", "frontier")
@@ -141,6 +142,17 @@ def load_cell(cell_id: str, missing: list[str]) -> dict | None:
     except ValueError as e:
         log.warning("%s", e)
         missing.append(f"{cell_id} (pre-fix schema; rerun)")
+        return None
+    # A cell whose LLM calls failed (API errors, unparseable output) silently
+    # falls back to neutral views; above 1% of calls it is not a valid result.
+    meta = c.get("metadata", {})
+    stats = meta.get("llm_stats") or {}
+    n_calls = sum(v for k, v in stats.items() if k.endswith(":calls"))
+    n_fail = max(int(meta.get("agent_failure_total", 0)),
+                 sum(v for k, v in stats.items() if k.endswith(":call_failed")))
+    if n_calls and n_fail / n_calls > MAX_FAILURE_RATE:
+        log.warning("%s: %d of %d LLM calls failed; treated as missing", cell_id, n_fail, n_calls)
+        missing.append(f"{cell_id} ({n_fail}/{n_calls} LLM calls failed; rerun)")
         return None
     c["excess_returns"] = c["excess_returns"].loc[str(START):str(END)]
     c["gross_excess_returns"] = c["gross_excess_returns"].loc[str(START):str(END)]

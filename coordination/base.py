@@ -7,6 +7,9 @@ the same `CoordinationResult` shape regardless of protocol.
 
 from __future__ import annotations
 
+import json
+import os
+
 from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass, field
@@ -40,6 +43,11 @@ class CoordinationProtocol(ABC):
 
     def _record_failure(self, component: str, exc: Exception) -> None:
         self.failures[component] += 1
+        path = os.environ.get("PACT_FAILURE_LOG")
+        if path:
+            with open(path, "a") as fh:
+                fh.write(json.dumps({"protocol": self.name, "component": component,
+                                     "type": type(exc).__name__, "msg": str(exc)[:300]}) + "\n")
         log.warning("protocol=%s component=%s failed: %s: %s",
                     self.name, component, type(exc).__name__, str(exc)[:200])
 
