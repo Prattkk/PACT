@@ -75,7 +75,9 @@ GROUPS = (("sonnet", "Sonnet", ("frontier", "frontier_r2", "frontier_r3")),
           ("clean", "DatedGPT", ("clean",)),
           ("haikuanon", "Haiku, masked", ("frontier_haiku_anon",)),
           ("sonnetanon", "Sonnet, masked", ("frontier_anon",)))
-MEANINGFUL_SR = 0.20   # pre-specified economically meaningful Sharpe improvement
+MEANINGFUL_SR = 0.20  # pre-specified economically meaningful Sharpe improvement
+SECONDARY_COLS = ("sonnet", "haiku")          # columns of the secondary table
+LEVEL_COLS = ("sonnet", "haiku", "clean")     # columns of the level table
 LABEL = {
     "single_agent": "Single-LLM monolith",
     "independent_ensemble": "Independent ensemble",
@@ -599,9 +601,10 @@ def main() -> None:
         for gkey, lst in per_group_p.items():
             for (lab, _), q in zip(lst, bh_qvalues([x for _, x in lst])):
                 qmap[(lab, gkey)] = q
+        shown = GROUPS if fam is MATCHED else [g for g in GROUPS if g[0] in SECONDARY_COLS]
         for a_, b_, lab in fam:
             cols = []
-            for gkey, glabel, regs in GROUPS:
+            for gkey, glabel, regs in shown:
                 r = cellsfmt.get((lab, gkey))
                 if r is None:
                     cols.append("--")
@@ -639,7 +642,7 @@ def main() -> None:
     for p in ("independent_ensemble", "sequential_pipeline", "pipeline_placebo", "hierarchical", "debate",
               "debate_multiround", "llm_plus_anchor", "single_agent", "single_agent_sc"):
         cols = []
-        for gkey, glabel, regs in GROUPS:
+        for gkey, glabel, regs in [g for g in GROUPS if g[0] in LEVEL_COLS]:
             vals = [sharpe(group_cells[gkey][(r, p)]["excess_returns"]) for r in regs
                     if (r, p) in group_cells.get(gkey, {})]
             if not vals:

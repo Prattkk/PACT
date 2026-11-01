@@ -1,0 +1,14 @@
+{
+  "fundamentals_carry": {
+    "weekly_change_rate": 0.194,
+    "mean_abs_tilt": 0.258
+  },
+  "macro_regime": {
+    "weekly_change_rate": 0.129,
+    "mean_abs_tilt": 0.325
+  },
+  "narrative_event": {
+    "weekly_change_rate": 0.204,
+    "mean_abs_tilt": 0.413
+  }
+}
