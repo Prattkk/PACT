@@ -51,3 +51,42 @@ class SequentialPipelineProtocol(CoordinationProtocol):
             final_views=pm_decision.views,
             per_agent_decisions=decisions + [pm_decision],
         )
+
+
+class PlaceboPipelineProtocol(SequentialPipelineProtocol):
+    """Control for the pipeline: the cross-asset agent is active (it votes)
+    but receives the macro and narrative views shifted to the wrong
+    instruments (a fixed cyclic derangement), so its vote carries no relevant
+    upstream information. Pipeline minus placebo isolates the value of
+    communicating upstream views; placebo minus ensemble isolates the effect of
+    adding a cross-asset voter."""
+
+    name = "pipeline_placebo"
+
+    def run(self, as_of: date) -> CoordinationResult:
+        decisions: list[AgentDecision] = []
+        macro = self.agents["macro_regime"].run(as_of)
+        narrative = self.agents["narrative_event"].run(as_of)
+        decisions.extend([macro, narrative])
+        xat = self.agents["cross_asset_transmission"]
+        if hasattr(xat, "set_upstream"):
+            xat.set_upstream(_derange(macro, self.universe), _derange(narrative, self.universe))
+        decisions.append(xat.run(as_of))
+        decisions.append(self.agents["technical_trend"].run(as_of))
+        decisions.append(self.agents["fundamentals_carry"].run(as_of))
+        decisions.append(self.agents["risk_correlation"].run(as_of))
+        pm = self.agents["portfolio_manager"]
+        if hasattr(pm, "set_inputs"):
+            pm.set_inputs(decisions)
+        pm_decision = pm.run(as_of)
+        return CoordinationResult(protocol=self.name, as_of=as_of, final_views=pm_decision.views,
+                                  per_agent_decisions=decisions + [pm_decision])
+
+
+def _derange(decision: AgentDecision, universe: tuple[str, ...]) -> AgentDecision:
+    """Relabel each view with the next instrument in the universe (cyclic shift)."""
+    syms = list(universe)
+    nxt = {s: syms[(i + 1) % len(syms)] for i, s in enumerate(syms)}
+    views = [v.model_copy(update={"instrument": nxt[v.instrument]}) if v.instrument in nxt else v
+             for v in decision.views]
+    return decision.model_copy(update={"views": views})

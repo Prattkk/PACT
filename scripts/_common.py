@@ -50,7 +50,7 @@ def load_config(name: str) -> dict:
 
 
 # Protocols that need their own llm_client kwarg (separate from the agents' LLM).
-_PROTOCOLS_NEEDING_LLM = {"single_agent", "debate", "debate_multiround", "llm_plus_anchor"}
+_PROTOCOLS_NEEDING_LLM = {"single_agent", "single_agent_sc", "debate", "debate_multiround", "llm_plus_anchor"}
 
 
 def build_agents(
@@ -111,6 +111,8 @@ FRONTIER_REGIMES: dict[str, dict] = {
     "frontier_r3": {"run_tag": "r3"},
     "frontier_anon": {"anonymize": True},
     "frontier_haiku": {"model": "claude-haiku-5-5"},
+    "frontier_haiku_anon": {"model": "claude-haiku-5-5", "anonymize": True},
+    **{f"frontier_haiku_r{k}": {"model": "claude-haiku-5-5", "run_tag": f"r{k}"} for k in range(2, 11)},
 }
 
 
@@ -131,6 +133,10 @@ def build_llm_client(regime: str, offline: bool = False, cutoff_year: int | None
         if cutoff_year is None:
             return ChronoGPTClient(offline=offline)
         return ChronoGPTClient(cutoff_year=cutoff_year, offline=offline)
+    if regime == "clean":
+        from llm.datedgpt_scorer import DatedGPTScorer
+
+        return DatedGPTScorer(offline=offline)
     if regime in FRONTIER_REGIMES:
         # Default frontier model is Claude; set PACT_FRONTIER=gpt4o for the old GPT-4o path.
         import os

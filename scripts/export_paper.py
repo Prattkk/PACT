@@ -55,19 +55,23 @@ START, END = date(2022, 1, 1), date(2024, 12, 31)
 SPLIT = pd.Timestamp("2023-01-01")
 REGIMES = ("none", "frontier")
 PROTOCOLS = ("single_agent", "independent_ensemble", "sequential_pipeline", "hierarchical",
-             "debate", "llm_plus_anchor")
-COORDINATED = ("sequential_pipeline", "hierarchical", "debate", "llm_plus_anchor")
+             "debate", "debate_multiround", "llm_plus_anchor")
+COORDINATED = ("sequential_pipeline", "hierarchical", "debate", "debate_multiround", "llm_plus_anchor")
+BASE_PROTOCOLS = ("single_agent", "independent_ensemble", "sequential_pipeline", "hierarchical",
+                  "debate", "llm_plus_anchor")   # run under every robustness regime
+ROBUST_REGIMES = ("frontier_r2", "frontier_r3", "frontier_anon", "frontier_haiku")
 LABEL = {
     "single_agent": "Single-LLM monolith",
     "independent_ensemble": "Independent ensemble",
     "sequential_pipeline": "Sequential pipeline",
     "hierarchical": "Hierarchical",
-    "debate": "Debate",
+    "debate": "Debate (1 round)",
+    "debate_multiround": "Debate (2 rounds)",
     "llm_plus_anchor": "LLM + anchor",
     "deterministic_only": "Deterministic baseline",
 }
 SHORT = {"single_agent": "monolith", "independent_ensemble": "ensemble",
-         "sequential_pipeline": "pipeline", "hierarchical": "hierarchical", "debate": "debate",
+         "sequential_pipeline": "pipeline", "hierarchical": "hierarchical", "debate": "debate", "debate_multiround": "debate-2r",
          "llm_plus_anchor": "LLM+anchor", "deterministic_only": "deterministic"}
 AGENTS = ("macro_regime", "narrative_event", "cross_asset_transmission", "technical_trend",
           "fundamentals_carry", "risk_correlation")
@@ -188,6 +192,8 @@ def main() -> None:
                 continue          # undefined without an LLM
             if reg == "none" and p == "llm_plus_anchor":
                 continue          # identical to the deterministic baseline by construction
+            if reg == "none" and p == "debate_multiround":
+                continue          # no LLM debaters: identical to the one-round debate fallback
             c = load_cell(f"{WINDOW}__{reg}__{p}", missing)
             if c is not None:
                 cells[(reg, p)] = c
@@ -242,8 +248,11 @@ def main() -> None:
             continue
         a = st.get(("none", p), {})
         b = st.get(("frontier", p), {})
+        if p == "debate_multiround":
+            a = st.get(("none", "debate"), {})
         none_cell = "n/a" if p == "single_agent" else (
-            r"\textit{=det.}" if p == "llm_plus_anchor" else num(a.get("sr")))
+            r"\textit{=det.}" if p == "llm_plus_anchor" else
+            r"\textit{=1 round}" if p == "debate_multiround" else num(a.get("sr")))
         delta = (b.get("sr", float("nan")) - a.get("sr", float("nan"))) if p != "single_agent" else float("nan")
         ci = interval(b.get("ci_lo", float("nan")), b.get("ci_hi", float("nan"))) if b else PENDING
         rows.append(
@@ -371,7 +380,7 @@ def main() -> None:
     cbs_rows = {}
     for reg in REGIMES:
         for p in COORDINATED:
-            if reg == "none" and p == "llm_plus_anchor":
+            if reg == "none" and p in ("llm_plus_anchor", "debate_multiround"):
                 continue
             gc, ge = gross(reg, p), gross(reg, "independent_ensemble")
             if gc is None or ge is None:
@@ -379,7 +388,7 @@ def main() -> None:
                 continue
             cbs_rows[(reg, p)] = coordination_breakeven_spread(
                 gc, ge, cells[(reg, p)]["turnover"], cells[(reg, "independent_ensemble")]["turnover"])
-    for (reg, p), v in cbs_rows.items():
+    for (reg, p), v in list(cbs_rows.items()):
         tag = f"cbs.{reg}.{p.replace('_', '')}"
         if math.isnan(v):
             have = (reg, p) in cells and (reg, "independent_ensemble") in cells
@@ -487,6 +496,152 @@ def main() -> None:
     else:
         N.set("alt.best", PENDING)
         N.set("alt.bestval", PENDING)
+
+
+    # ---------------- robustness: repeat samples, masked identifiers, second model
+    rob = {}
+    for reg in ROBUST_REGIMES:
+        for p in BASE_PROTOCOLS:
+            c = load_cell(f"{WINDOW}__{reg}__{p}", missing)
+            if c is not None:
+                rob[(reg, p)] = c
+    rob_sr = {k: sharpe(c["excess_returns"]) for k, c in rob.items()}
+    run_regs = ("frontier", "frontier_r2", "frontier_r3")
+
+    def sr_any(reg, p):
+        return sr(reg, p) if reg == "frontier" else rob_sr.get((reg, p), float("nan"))
+
+    rrow, sds = [], []
+    for p in BASE_PROTOCOLS:
+        runs = [sr_any(r, p) for r in run_regs]
+        ok = [x for x in runs if not math.isnan(x)]
+        mean = float(np.mean(ok)) if len(ok) == 3 else float("nan")
+        sd = float(np.std(ok, ddof=1)) if len(ok) == 3 else float("nan")
+        if not math.isnan(sd):
+            sds.append(sd)
+        anon, haiku = sr_any("frontier_anon", p), sr_any("frontier_haiku", p)
+        rrow.append(f"{LABEL[p]} & " + " & ".join(num(x) for x in runs) +
+                    f" & {num(mean)} ({plain(sd)}) & {num(anon)} & {num(haiku)} \\\\")
+        tag = p.replace("_", "")
+        N.set(f"rob.{tag}.mean", num(mean), mean)
+        N.set(f"rob.{tag}.sd", plain(sd), sd)
+        N.set(f"rob.{tag}.anon", num(anon), anon)
+        N.set(f"rob.{tag}.haiku", num(haiku), haiku)
+        N.set(f"rob.{tag}.anondelta", num(anon - runs[0]), anon - runs[0])
+    # H1 within every regime: coordinated (base set) minus that regime's ensemble, BH within regime
+    base_coord = [p for p in COORDINATED if p in BASE_PROTOCOLS]
+    h1row_cells = []
+    h1_summary = {}
+    for reg in run_regs + ("frontier_anon", "frontier_haiku"):
+        def ser(p, reg=reg):
+            if reg == "frontier":
+                return cells[(reg, p)]["excess_returns"] if (reg, p) in cells else None
+            return rob[(reg, p)]["excess_returns"] if (reg, p) in rob else None
+        ens = ser("independent_ensemble")
+        res = []
+        for p in base_coord:
+            rp = ser(p)
+            if rp is None or ens is None:
+                res = None
+                break
+            res.append(ledoit_wolf_sharpe_test(rp, ens))
+        if res is None:
+            h1row_cells.append(PENDING)
+            h1_summary[reg] = None
+            continue
+        qs = bh_qvalues([r["p_value"] for r in res])
+        nb = sum(1 for r in res if r["sr_diff"] > 0)
+        nsig = sum(1 for r, q in zip(res, qs) if q < 0.05)
+        h1_summary[reg] = {"n_better": nb, "n_sig": nsig, "min_q": float(min(qs))}
+        h1row_cells.append(f"{nb}/{len(res)} ({nsig})")
+    rrow.append(r"\midrule " + r"Coordinated $>$ ensemble (sig.) & " + " & ".join(h1row_cells[:3]) +
+                " & & " + " & ".join(h1row_cells[3:]) + r" \\")
+    (out / "tab_robust.tex").write_text("\n".join(rrow) + "\n")
+    complete = [v for v in h1_summary.values() if v is not None]          # all five settings
+    extra = [h1_summary[r] for r in ROBUST_REGIMES if h1_summary.get(r) is not None]
+    if len(extra) == len(ROBUST_REGIMES):
+        nsig = sum(v["n_sig"] for v in extra)
+        N.set("rob.h1nsigtotal", str(nsig), nsig)
+        N.set("rob.h1ntests", str(len(ROBUST_REGIMES) * len(base_coord)), len(ROBUST_REGIMES) * len(base_coord))
+        N.set("rob.h1minq", pval(min(v["min_q"] for v in extra)), min(v["min_q"] for v in extra))
+    else:
+        missing.append("robustness regimes incomplete")
+    if len(complete) == len(ROBUST_REGIMES) + 1:
+        nb = [v["n_better"] for v in complete]
+        N.set("rob.h1nbetterlo", str(min(nb)), min(nb))
+        N.set("rob.h1nbetterhi", str(max(nb)), max(nb))
+    if sds:
+        N.set("rob.sdmean", plain(float(np.mean(sds))), float(np.mean(sds)))
+        N.set("rob.sdmax", plain(float(np.max(sds))), float(np.max(sds)))
+    an = [rob_sr.get(("frontier_anon", p), float("nan")) - sr("frontier", p) for p in BASE_PROTOCOLS]
+    an = [x for x in an if not math.isnan(x)]
+    if len(an) == len(BASE_PROTOCOLS):
+        N.set("rob.anonmeandelta", num(float(np.mean(an))), float(np.mean(an)))
+        N.set("rob.anonmaxabs", plain(float(np.max(np.abs(an)))), float(np.max(np.abs(an))))
+        N.set("rob.anonnlower", str(sum(1 for x in an if x < 0)), sum(1 for x in an if x < 0))
+    # ranking stability: Spearman rank correlation of protocol Sharpe ratios run 1 vs others
+    from scipy.stats import spearmanr
+    base = [sr("frontier", p) for p in BASE_PROTOCOLS]
+    for reg in ROBUST_REGIMES:
+        other = [rob_sr.get((reg, p), float("nan")) for p in BASE_PROTOCOLS]
+        if not any(math.isnan(x) for x in base + other):
+            rho = float(spearmanr(base, other).correlation)
+            N.set(f"rob.rank.{reg.replace('_', '')}", plain(rho), rho)
+
+    # ---------------- mechanisms and power (scripts/analyze_mechanisms.py)
+    mech_path = TABLES_DIR / "mechanisms_frontier.json"
+    if mech_path.exists():
+        mech = json.loads(mech_path.read_text())
+        mrow = []
+        for p in ("single_agent",) + COORDINATED:
+            m = mech.get("pairs", {}).get(p)
+            if not m:
+                mrow.append(f"{LABEL[p]} & {PENDING} & {PENDING} & {PENDING} & {PENDING} & {PENDING} \\\\")
+                continue
+            mrow.append(f"{LABEL[p]} & {plain(m['rho'])} & {plain(m['sign_disagreement'] * 100, 0)}\\% & "
+                        f"{pct(m['diff_ann_mean'])} & {num(m['diff_sharpe'])} & {plain(m['mde_3y'])} \\\\")
+            tag = p.replace("_", "")
+            for k in ("rho", "sign_disagreement", "diff_ann_mean", "diff_sharpe", "mde_3y", "active_share"):
+                N.set(f"mech.{tag}.{k.replace('_', '')}",
+                      pct(m[k]) if k in ("diff_ann_mean",) else plain(m[k] * 100, 0) + r"\%" if k in ("sign_disagreement", "active_share") else plain(m[k]),
+                      m[k])
+        (out / "tab_mech.tex").write_text("\n".join(mrow) + "\n")
+        rhos = [m["rho"] for m in mech.get("pairs", {}).values()]
+        mdes = [m["mde_3y"] for m in mech.get("pairs", {}).values()]
+        if rhos:
+            N.set("mech.rholo", plain(min(rhos)), min(rhos)); N.set("mech.rhohi", plain(max(rhos)), max(rhos))
+            N.set("mech.mdelo", plain(min(mdes)), min(mdes)); N.set("mech.mdehi", plain(max(mdes)), max(mdes))
+        agents = mech.get("agents")
+        grow = []
+        if agents:
+            for a_ in ("macro_regime", "narrative_event", "cross_asset_transmission", "fundamentals_carry"):
+                r = agents[a_]
+                grow.append(f"{AGENT_LABEL[a_]} & {plain(r['anchor']['hit_rate'] * 100, 1)} & "
+                            f"{plain(r['llm']['hit_rate'] * 100, 1)} & {plain(r['changed_share'] * 100, 0)}\\% & "
+                            f"{plain(r['changed_hit_rate'] * 100, 1)} ({r['changed_n']}) \\\\")
+                tag = a_.replace("_", "")
+                N.set(f"agent.{tag}.anchorhit", plain(r["anchor"]["hit_rate"] * 100, 1) + r"\%", r["anchor"]["hit_rate"])
+                N.set(f"agent.{tag}.llmhit", plain(r["llm"]["hit_rate"] * 100, 1) + r"\%", r["llm"]["hit_rate"])
+                N.set(f"agent.{tag}.changed", plain(r["changed_share"] * 100, 0) + r"\%", r["changed_share"])
+                N.set(f"agent.{tag}.changedhit", plain(r["changed_hit_rate"] * 100, 1) + r"\%", r["changed_hit_rate"])
+                N.set(f"agent.{tag}.anchoric", num(r["anchor"]["ic"], 3), r["anchor"]["ic"])
+                N.set(f"agent.{tag}.llmic", num(r["llm"]["ic"], 3), r["llm"]["ic"])
+            t = agents["technical_trend"]["anchor"]
+            N.set("agent.technicaltrend.anchorhit", plain(t["hit_rate"] * 100, 1) + r"\%", t["hit_rate"])
+        else:
+            missing.append("mechanisms: per-agent accuracy")
+        (out / "tab_agents.tex").write_text("\n".join(grow) + "\n")
+        prow = []
+        for g in mech["power"]["grid"]:
+            prow.append(f"{g['rho']:.2f} & {plain(g['mde_3y'])} & {plain(g['mde_10y'])} & {plain(g['mde_25y'])} & "
+                        f"{g['years_for_0.25']:.0f} \\\\")
+            N.set(f"power.years.{int(round(g['rho'] * 100))}", f"{g['years_for_0.25']:.0f}", g["years_for_0.25"])
+            N.set(f"power.mde3.{int(round(g['rho'] * 100))}", plain(g["mde_3y"]), g["mde_3y"])
+            if "mde_3m" in g:
+                N.set(f"power.mdeq.{int(round(g['rho'] * 100))}", plain(g["mde_3m"], 1), g["mde_3m"])
+        (out / "tab_power.tex").write_text("\n".join(prow) + "\n")
+    else:
+        missing.append(str(mech_path))
 
     # ---------------- implementation audit
     audit_path = TABLES_DIR / "pitfall_audit.json"

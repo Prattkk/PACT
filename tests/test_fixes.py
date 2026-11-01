@@ -274,3 +274,33 @@ def test_anonymizer_round_trip():
     m = mask(t)
     assert "SPY" not in m and "2023-03-17" not in m and "IEF" not in m
     assert unmask(m).replace("[date]", "2023-03-17") == t
+
+
+def test_placebo_derangement_moves_every_view():
+    from agents.base_agent import AgentDecision, InstrumentView
+    from coordination.sequential_pipeline import _derange
+    u = ("SPY", "QQQ", "IEF")
+    d = AgentDecision(agent_name="m", as_of=date(2024, 1, 5), views=[
+        InstrumentView(instrument=s, direction=i - 1, conviction=0.5, horizon="1q") for i, s in enumerate(u)])
+    out = {v.instrument: v.direction for v in _derange(d, u).views}
+    assert out == {"QQQ": -1, "IEF": 0, "SPY": 1}
+
+
+def test_self_consistent_monolith_averages_samples():
+    from coordination.single_agent import SelfConsistentMonolithProtocol
+    from llm.base import LLMResponse
+
+    class FakeLLM:
+        model, run_tag = "fake", None
+        def complete(self, *, system, user, max_tokens=2048, **kw):
+            d = -1 if (self.run_tag or "").endswith("sc2") else 1
+            return LLMResponse(text=json.dumps([{"instrument": "SPY", "direction": d, "conviction": 0.5,
+                                                 "horizon": "1w", "rationale": "x"}]), model="fake", prompt_hash="h")
+
+    class A:
+        name = "a"
+        def extract_factors(self, as_of):
+            return {"SPY": {"x": 1.0}}
+
+    v = SelfConsistentMonolithProtocol({"a": A()}, FakeLLM(), ("SPY",)).run(date(2024, 1, 5)).final_views[0]
+    assert v.direction == 1 and abs(v.conviction - 0.3) < 1e-9   # (4*0.5 - 0.5)/5

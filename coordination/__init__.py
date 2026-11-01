@@ -4,13 +4,15 @@ from coordination.deterministic_only import DeterministicOnlyProtocol
 from coordination.hierarchical import HierarchicalProtocol
 from coordination.independent_ensemble import IndependentEnsembleProtocol
 from coordination.llm_plus_anchor import LLMPlusAnchorProtocol
-from coordination.sequential_pipeline import SequentialPipelineProtocol
-from coordination.single_agent import SingleAgentProtocol
+from coordination.sequential_pipeline import PlaceboPipelineProtocol, SequentialPipelineProtocol
+from coordination.single_agent import SelfConsistentMonolithProtocol, SingleAgentProtocol
 
 REGISTRY = {
     "single_agent": SingleAgentProtocol,
+    "single_agent_sc": SelfConsistentMonolithProtocol,
     "independent_ensemble": IndependentEnsembleProtocol,
     "sequential_pipeline": SequentialPipelineProtocol,
+    "pipeline_placebo": PlaceboPipelineProtocol,
     "hierarchical": HierarchicalProtocol,
     "debate": DebateProtocol,
     "debate_multiround": MultiRoundDebateProtocol,

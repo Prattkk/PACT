@@ -62,6 +62,7 @@ class BacktestConfig:
     use_risk_free: bool = True                # excess returns over 13-week T-bills
     portfolio: PortfolioConfig = field(default_factory=PortfolioConfig)
     turnover_cap_per_period: float = 0.50     # one-way, fraction of NAV per decision
+    exclude_symbols: tuple[str, ...] = ()     # sensitivity: hold these at zero weight
 
 
 @dataclass
@@ -163,7 +164,7 @@ def run_backtest(
             cov_matrix=hist.tail(252).cov() if len(hist) >= 252 else None,
             cfg=cfg.portfolio,
         )
-        tgt = {s: tgt.get(s, 0.0) for s in cols}
+        tgt = {s: (0.0 if s in cfg.exclude_symbols else tgt.get(s, 0.0)) for s in cols}
         tgt = apply_drawdown_breaker(tgt, dd_60d, weeks_since_breach)
         tgt = apply_correlation_throttle(tgt, avg_corr)
 
