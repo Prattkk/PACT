@@ -39,6 +39,7 @@ from evaluation.metrics import (
     sortino,
 )
 from evaluation.statistical_tests import (
+    multirun_sharpe_diff,
     bh_qvalues,
     ledoit_wolf_sharpe_test,
     paired_bootstrap_sharpe_diff,
@@ -59,7 +60,22 @@ PROTOCOLS = ("single_agent", "independent_ensemble", "sequential_pipeline", "hie
 COORDINATED = ("sequential_pipeline", "hierarchical", "debate", "debate_multiround", "llm_plus_anchor")
 BASE_PROTOCOLS = ("single_agent", "independent_ensemble", "sequential_pipeline", "hierarchical",
                   "debate", "llm_plus_anchor")   # run under every robustness regime
-ROBUST_REGIMES = ("frontier_r2", "frontier_r3", "frontier_anon", "frontier_haiku")
+# Main experiment: matched comparisons, pooled over independent runs within each model group
+MATCHED = (("sequential_pipeline", "independent_ensemble", "Pipeline vs ensemble"),
+           ("pipeline_placebo", "independent_ensemble", "Placebo vs ensemble (added voter)"),
+           ("sequential_pipeline", "pipeline_placebo", "Pipeline vs placebo (communication)"),
+           ("hierarchical", "independent_ensemble", "Hierarchical vs ensemble"))
+SECONDARY = (("debate", "independent_ensemble", "Debate, 1 round"),
+             ("debate_multiround", "independent_ensemble", "Debate, 2 rounds"),
+             ("llm_plus_anchor", "independent_ensemble", "LLM + anchor"),
+             ("single_agent", "independent_ensemble", "Monolith"),
+             ("single_agent_sc", "independent_ensemble", "Monolith, 5 samples"))
+GROUPS = (("sonnet", "Sonnet", ("frontier", "frontier_r2", "frontier_r3")),
+          ("haiku", "Haiku", ("frontier_haiku",) + tuple(f"frontier_haiku_r{k}" for k in range(2, 11))),
+          ("clean", "DatedGPT", ("clean",)),
+          ("haikuanon", "Haiku, masked", ("frontier_haiku_anon",)),
+          ("sonnetanon", "Sonnet, masked", ("frontier_anon",)))
+MEANINGFUL_SR = 0.20   # pre-specified economically meaningful Sharpe improvement
 LABEL = {
     "single_agent": "Single-LLM monolith",
     "independent_ensemble": "Independent ensemble",
@@ -68,10 +84,12 @@ LABEL = {
     "debate": "Debate (1 round)",
     "debate_multiround": "Debate (2 rounds)",
     "llm_plus_anchor": "LLM + anchor",
+    "pipeline_placebo": "Placebo pipeline",
+    "single_agent_sc": "Monolith, 5 samples",
     "deterministic_only": "Deterministic baseline",
 }
 SHORT = {"single_agent": "monolith", "independent_ensemble": "ensemble",
-         "sequential_pipeline": "pipeline", "hierarchical": "hierarchical", "debate": "debate", "debate_multiround": "debate-2r",
+         "sequential_pipeline": "pipeline", "hierarchical": "hierarchical", "debate": "debate", "debate_multiround": "debate-2r", "pipeline_placebo": "placebo", "single_agent_sc": "monolith-SC",
          "llm_plus_anchor": "LLM+anchor", "deterministic_only": "deterministic"}
 AGENTS = ("macro_regime", "narrative_event", "cross_asset_transmission", "technical_trend",
           "fundamentals_carry", "risk_correlation")
@@ -498,96 +516,6 @@ def main() -> None:
         N.set("alt.bestval", PENDING)
 
 
-    # ---------------- robustness: repeat samples, masked identifiers, second model
-    rob = {}
-    for reg in ROBUST_REGIMES:
-        for p in BASE_PROTOCOLS:
-            c = load_cell(f"{WINDOW}__{reg}__{p}", missing)
-            if c is not None:
-                rob[(reg, p)] = c
-    rob_sr = {k: sharpe(c["excess_returns"]) for k, c in rob.items()}
-    run_regs = ("frontier", "frontier_r2", "frontier_r3")
-
-    def sr_any(reg, p):
-        return sr(reg, p) if reg == "frontier" else rob_sr.get((reg, p), float("nan"))
-
-    rrow, sds = [], []
-    for p in BASE_PROTOCOLS:
-        runs = [sr_any(r, p) for r in run_regs]
-        ok = [x for x in runs if not math.isnan(x)]
-        mean = float(np.mean(ok)) if len(ok) == 3 else float("nan")
-        sd = float(np.std(ok, ddof=1)) if len(ok) == 3 else float("nan")
-        if not math.isnan(sd):
-            sds.append(sd)
-        anon, haiku = sr_any("frontier_anon", p), sr_any("frontier_haiku", p)
-        rrow.append(f"{LABEL[p]} & " + " & ".join(num(x) for x in runs) +
-                    f" & {num(mean)} ({plain(sd)}) & {num(anon)} & {num(haiku)} \\\\")
-        tag = p.replace("_", "")
-        N.set(f"rob.{tag}.mean", num(mean), mean)
-        N.set(f"rob.{tag}.sd", plain(sd), sd)
-        N.set(f"rob.{tag}.anon", num(anon), anon)
-        N.set(f"rob.{tag}.haiku", num(haiku), haiku)
-        N.set(f"rob.{tag}.anondelta", num(anon - runs[0]), anon - runs[0])
-    # H1 within every regime: coordinated (base set) minus that regime's ensemble, BH within regime
-    base_coord = [p for p in COORDINATED if p in BASE_PROTOCOLS]
-    h1row_cells = []
-    h1_summary = {}
-    for reg in run_regs + ("frontier_anon", "frontier_haiku"):
-        def ser(p, reg=reg):
-            if reg == "frontier":
-                return cells[(reg, p)]["excess_returns"] if (reg, p) in cells else None
-            return rob[(reg, p)]["excess_returns"] if (reg, p) in rob else None
-        ens = ser("independent_ensemble")
-        res = []
-        for p in base_coord:
-            rp = ser(p)
-            if rp is None or ens is None:
-                res = None
-                break
-            res.append(ledoit_wolf_sharpe_test(rp, ens))
-        if res is None:
-            h1row_cells.append(PENDING)
-            h1_summary[reg] = None
-            continue
-        qs = bh_qvalues([r["p_value"] for r in res])
-        nb = sum(1 for r in res if r["sr_diff"] > 0)
-        nsig = sum(1 for r, q in zip(res, qs) if q < 0.05)
-        h1_summary[reg] = {"n_better": nb, "n_sig": nsig, "min_q": float(min(qs))}
-        h1row_cells.append(f"{nb}/{len(res)} ({nsig})")
-    rrow.append(r"\midrule " + r"Coordinated $>$ ensemble (sig.) & " + " & ".join(h1row_cells[:3]) +
-                " & & " + " & ".join(h1row_cells[3:]) + r" \\")
-    (out / "tab_robust.tex").write_text("\n".join(rrow) + "\n")
-    complete = [v for v in h1_summary.values() if v is not None]          # all five settings
-    extra = [h1_summary[r] for r in ROBUST_REGIMES if h1_summary.get(r) is not None]
-    if len(extra) == len(ROBUST_REGIMES):
-        nsig = sum(v["n_sig"] for v in extra)
-        N.set("rob.h1nsigtotal", str(nsig), nsig)
-        N.set("rob.h1ntests", str(len(ROBUST_REGIMES) * len(base_coord)), len(ROBUST_REGIMES) * len(base_coord))
-        N.set("rob.h1minq", pval(min(v["min_q"] for v in extra)), min(v["min_q"] for v in extra))
-    else:
-        missing.append("robustness regimes incomplete")
-    if len(complete) == len(ROBUST_REGIMES) + 1:
-        nb = [v["n_better"] for v in complete]
-        N.set("rob.h1nbetterlo", str(min(nb)), min(nb))
-        N.set("rob.h1nbetterhi", str(max(nb)), max(nb))
-    if sds:
-        N.set("rob.sdmean", plain(float(np.mean(sds))), float(np.mean(sds)))
-        N.set("rob.sdmax", plain(float(np.max(sds))), float(np.max(sds)))
-    an = [rob_sr.get(("frontier_anon", p), float("nan")) - sr("frontier", p) for p in BASE_PROTOCOLS]
-    an = [x for x in an if not math.isnan(x)]
-    if len(an) == len(BASE_PROTOCOLS):
-        N.set("rob.anonmeandelta", num(float(np.mean(an))), float(np.mean(an)))
-        N.set("rob.anonmaxabs", plain(float(np.max(np.abs(an)))), float(np.max(np.abs(an))))
-        N.set("rob.anonnlower", str(sum(1 for x in an if x < 0)), sum(1 for x in an if x < 0))
-    # ranking stability: Spearman rank correlation of protocol Sharpe ratios run 1 vs others
-    from scipy.stats import spearmanr
-    base = [sr("frontier", p) for p in BASE_PROTOCOLS]
-    for reg in ROBUST_REGIMES:
-        other = [rob_sr.get((reg, p), float("nan")) for p in BASE_PROTOCOLS]
-        if not any(math.isnan(x) for x in base + other):
-            rho = float(spearmanr(base, other).correlation)
-            N.set(f"rob.rank.{reg.replace('_', '')}", plain(rho), rho)
-
     # ---------------- mechanisms and power (scripts/analyze_mechanisms.py)
     mech_path = TABLES_DIR / "mechanisms_frontier.json"
     if mech_path.exists():
@@ -643,6 +571,143 @@ def main() -> None:
     else:
         missing.append(str(mech_path))
 
+
+    # ---------------- main experiment: matched comparisons pooled over runs
+    group_cells: dict[str, dict[tuple[str, str], list]] = {}
+    for gkey, glabel, regs in GROUPS:
+        for reg in regs:
+            for p in {x for c in MATCHED + SECONDARY for x in c[:2]}:
+                c = load_cell(f"{WINDOW}__{reg}__{p}", []) if (RAW_DIR / f"{WINDOW}__{reg}__{p}").exists() else None
+                if c is not None:
+                    group_cells.setdefault(gkey, {}).setdefault((reg, p), c)
+    mrow, srow = [], []
+    for fam, rows_out in ((MATCHED, mrow), (SECONDARY, srow)):
+        per_group_p = {}
+        cellsfmt = {}
+        for a_, b_, lab in fam:
+            for gkey, glabel, regs in GROUPS:
+                gc = group_cells.get(gkey, {})
+                pairs = [(gc[(r, a_)]["excess_returns"], gc[(r, b_)]["excess_returns"])
+                         for r in regs if (r, a_) in gc and (r, b_) in gc]
+                if not pairs:
+                    cellsfmt[(lab, gkey)] = None
+                    continue
+                res = multirun_sharpe_diff(pairs)
+                cellsfmt[(lab, gkey)] = res
+                per_group_p.setdefault(gkey, []).append((lab, res["p_value"]))
+        qmap = {}
+        for gkey, lst in per_group_p.items():
+            for (lab, _), q in zip(lst, bh_qvalues([x for _, x in lst])):
+                qmap[(lab, gkey)] = q
+        for a_, b_, lab in fam:
+            cols = []
+            for gkey, glabel, regs in GROUPS:
+                r = cellsfmt.get((lab, gkey))
+                if r is None:
+                    cols.append("--")
+                    continue
+                q = qmap.get((lab, gkey), float("nan"))
+                star = "$^{*}$" if q < 0.05 else ""
+                runs = f" {{\\tiny({int(round(r['share_positive'] * r['n_runs']))}/{r['n_runs']})}}" if r["n_runs"] > 1 else ""
+                cols.append(f"{num(r['diff'])}{star} {{\\tiny{interval(r['ci_lo'], r['ci_hi'])}}}{runs}")
+                tag = f"m.{gkey}.{a_.replace('_', '')}.{b_.replace('_', '')}"
+                N.set(tag + ".diff", num(r["diff"]), r["diff"])
+                N.set(tag + ".lo", num(r["ci_lo"]), r["ci_lo"])
+                N.set(tag + ".hi", num(r["ci_hi"]), r["ci_hi"])
+                N.set(tag + ".q", pval(q), q)
+                N.set(tag + ".runs", str(r["n_runs"]), r["n_runs"])
+                N.set(tag + ".npos", str(int(round(r["share_positive"] * r["n_runs"]))), r["share_positive"])
+                N.set(tag + ".sdruns", plain(r["sd_runs"]), r["sd_runs"])
+                N.set(tag + ".excl", "excludes" if r["ci_hi"] < MEANINGFUL_SR else "does not exclude",
+                      r["ci_hi"] < MEANINGFUL_SR)
+            rows_out.append(f"{lab} & " + " & ".join(cols) + r" \\")
+        # summary over the family
+        allq = [q for q in qmap.values()]
+        N.set(f"fam.{'main' if fam is MATCHED else 'sec'}.nsig", str(sum(1 for q in allq if q < 0.05)),
+              sum(1 for q in allq if q < 0.05))
+        N.set(f"fam.{'main' if fam is MATCHED else 'sec'}.ntests", str(len(allq)), len(allq))
+        nexcl = sum(1 for v in cellsfmt.values() if v and v["ci_hi"] < MEANINGFUL_SR)
+        N.set(f"fam.{'main' if fam is MATCHED else 'sec'}.nexcl", str(nexcl), nexcl)
+    (out / "tab_matched.tex").write_text("\n".join(mrow) + "\n")
+    (out / "tab_secondary.tex").write_text("\n".join(srow) + "\n")
+    for gkey, glabel, regs in GROUPS:
+        n_runs = len({r for (r, p) in group_cells.get(gkey, {}) if p == "independent_ensemble"})
+        N.set(f"group.{gkey}.nruns", str(n_runs), n_runs)
+    N.set("meaningful.sr", plain(MEANINGFUL_SR), MEANINGFUL_SR)
+    # level table: Sharpe per protocol and group (mean over runs)
+    lrow2 = []
+    for p in ("independent_ensemble", "sequential_pipeline", "pipeline_placebo", "hierarchical", "debate",
+              "debate_multiround", "llm_plus_anchor", "single_agent", "single_agent_sc"):
+        cols = []
+        for gkey, glabel, regs in GROUPS:
+            vals = [sharpe(group_cells[gkey][(r, p)]["excess_returns"]) for r in regs
+                    if (r, p) in group_cells.get(gkey, {})]
+            if not vals:
+                cols.append("--")
+                continue
+            m = float(np.mean(vals))
+            cols.append(num(m) + (f" {{\\tiny({plain(float(np.std(vals, ddof=1)))})}}" if len(vals) > 1 else ""))
+            N.set(f"lvl.{gkey}.{p.replace('_', '')}", num(m), m)
+        lrow2.append(f"{LABEL[p]} & " + " & ".join(cols) + r" \\")
+    (out / "tab_levels.tex").write_text("\n".join(lrow2) + "\n")
+
+    # ---------------- compute per protocol, sensitivity, narrative decomposition
+    for gkey, reg in (("sonnet", "frontier"), ("haiku", "frontier_haiku")):
+        mp = TABLES_DIR / f"mechanisms_{reg}.json"
+        if mp.exists():
+            comp = json.loads(mp.read_text()).get("compute", {})
+            for p, c in comp.items():
+                if "calls" in c:
+                    tag = f"comp.{gkey}.{p.replace('_', '')}"
+                    N.set(tag + ".calls", f"{c['calls']:,}", c["calls"])
+                    N.set(tag + ".mtok", plain((c["input_tokens"] + c["output_tokens"]) / 1e6, 1),
+                          (c["input_tokens"] + c["output_tokens"]) / 1e6)
+                    N.set(tag + ".usd", plain(c["cost_usd"], 1 if c["cost_usd"] >= 1 else 2), c["cost_usd"])
+                    N.set(tag + ".hours", plain(c["latency_hours"], 1), c["latency_hours"])
+    crow = []
+    sp = TABLES_DIR / "mechanisms_frontier.json"
+    hp = TABLES_DIR / "mechanisms_frontier_haiku.json"
+    comp_s = json.loads(sp.read_text()).get("compute", {}) if sp.exists() else {}
+    comp_h = json.loads(hp.read_text()).get("compute", {}) if hp.exists() else {}
+    for p in ("independent_ensemble", "sequential_pipeline", "pipeline_placebo", "hierarchical", "debate",
+              "debate_multiround", "llm_plus_anchor", "single_agent", "single_agent_sc"):
+        cs, ch = comp_s.get(p, {}), comp_h.get(p, {})
+        if "calls" not in cs and "calls" not in ch:
+            continue
+        def fmt(c):
+            if "calls" not in c:
+                return "-- & -- & --"
+            return (f"{c['calls']:,} & {(c['input_tokens'] + c['output_tokens']) / 1e6:.1f} & "
+                    f"\\${c['cost_usd']:.2f}")
+        crow.append(f"{LABEL[p]} & {fmt(cs)} & {fmt(ch)} \\\\")
+    (out / "tab_compute.tex").write_text("\n".join(crow) + "\n")
+    for reg, gkey in (("frontier", "sonnet"), ("frontier_haiku", "haiku"), ("clean", "clean"), ("none", "none")):
+        sp_ = TABLES_DIR / f"sensitivity_{reg}.json"
+        if sp_.exists():
+            sens = json.loads(sp_.read_text())
+            for p, row in sens["cost_sweep"].items():
+                for c, v in row.items():
+                    N.set(f"sens.{gkey}.{p.replace('_', '')}.tc{c}", num(v), v)
+            for p, v in sens["no_btc"].items():
+                N.set(f"sens.{gkey}.{p.replace('_', '')}.nobtc", num(v), v)
+    for reg, gkey in (("frontier", "sonnet"), ("frontier_haiku", "haiku"), ("clean", "clean"), ("none", "none")):
+        npath = TABLES_DIR / f"narrative_{reg}.json"
+        if npath.exists():
+            nd = json.loads(npath.read_text())
+            N.set(f"narr.{gkey}.srfull", num(nd["sharpe_full"]), nd["sharpe_full"])
+            N.set(f"narr.{gkey}.srwithout", num(nd["sharpe_without"]), nd["sharpe_without"])
+            N.set(f"narr.{gkey}.tofull", plain(nd["turnover_full"], 1), nd["turnover_full"])
+            N.set(f"narr.{gkey}.towithout", plain(nd["turnover_without"], 1), nd["turnover_without"])
+            N.set(f"narr.{gkey}.gain", pct(nd["ann_return_gain_total"]), nd["ann_return_gain_total"])
+            N.set(f"narr.{gkey}.top10", plain(nd["share_of_gain_from_top10_weeks"] * 100, 0) + r"\%",
+                  nd["share_of_gain_from_top10_weeks"])
+            N.set(f"narr.{gkey}.g22", pct(nd["gain_2022"]), nd["gain_2022"])
+            N.set(f"narr.{gkey}.g2324", pct(nd["gain_2023_24"]), nd["gain_2023_24"])
+            ga = nd["ann_return_gain_by_asset"]
+            best = max(ga, key=ga.get)
+            N.set(f"narr.{gkey}.bestasset", best, best)
+            N.set(f"narr.{gkey}.bestassetgain", pct(ga[best]), ga[best])
+            N.set(f"narr.{gkey}.signdiff", plain(nd["sign_disagreement"] * 100, 0) + r"\%", nd["sign_disagreement"])
     # ---------------- implementation audit
     audit_path = TABLES_DIR / "pitfall_audit.json"
     arows = []
