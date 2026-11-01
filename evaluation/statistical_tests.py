@@ -151,3 +151,36 @@ def bh_qvalues(p_values: list[float]) -> list[float]:
     out = np.empty(m)
     out[order] = np.minimum(q, 1.0)
     return out.tolist()
+
+
+def multirun_sharpe_diff(
+    pairs: list[tuple[pd.Series, pd.Series]], block: int = 21, n_boot: int = 2000, alpha: float = 0.05,
+    seed: int = 11,
+) -> dict[str, float]:
+    """Sharpe difference pooled over independent LLM runs.
+
+    `pairs` holds one (protocol, comparator) excess-return pair per run. Each
+    bootstrap draw resamples runs with replacement (model-sampling variation)
+    and applies one common circular block resample of days to every run
+    (market variation with serial dependence), then averages SR_a - SR_b over
+    the drawn runs. Returns the mean difference over runs, its CI and a
+    two-sided p-value, the across-run SD and the share of runs with a positive
+    difference.
+    """
+    aligned = [_align(a, b) for a, b in pairs]
+    n = min(len(a) for a, _ in aligned)
+    aligned = [(a[:n], b[:n]) for a, b in aligned]
+    diffs = np.array([_sr(a) - _sr(b) for a, b in aligned])
+    rng = np.random.default_rng(seed)
+    R = len(aligned)
+    draws = np.empty(n_boot)
+    for k in range(n_boot):
+        runs = rng.integers(0, R, R)
+        idx = _circular_block_indices(n, block, rng)
+        draws[k] = np.mean([_sr(aligned[r][0][idx]) - _sr(aligned[r][1][idx]) for r in runs])
+    lo, hi = np.nanquantile(draws, [alpha / 2, 1 - alpha / 2])
+    obs = float(diffs.mean())
+    p = float(np.mean(np.abs(draws - np.nanmean(draws)) >= abs(obs)))
+    return {"diff": obs, "ci_lo": float(lo), "ci_hi": float(hi), "p_value": p, "n_runs": R,
+            "sd_runs": float(diffs.std(ddof=1)) if R > 1 else float("nan"),
+            "share_positive": float((diffs > 0).mean()), "per_run": [float(x) for x in diffs]}

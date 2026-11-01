@@ -304,3 +304,13 @@ def test_self_consistent_monolith_averages_samples():
 
     v = SelfConsistentMonolithProtocol({"a": A()}, FakeLLM(), ("SPY",)).run(date(2024, 1, 5)).final_views[0]
     assert v.direction == 1 and abs(v.conviction - 0.3) < 1e-9   # (4*0.5 - 0.5)/5
+
+
+def test_multirun_sharpe_diff_covers_true_zero():
+    from evaluation.statistical_tests import multirun_sharpe_diff
+    rng = np.random.default_rng(12)
+    common = rng.normal(0.0004, 0.01, 750)
+    pairs = [(pd.Series(common + rng.normal(0, 0.003, 750)), pd.Series(common + rng.normal(0, 0.003, 750)))
+             for _ in range(5)]
+    out = multirun_sharpe_diff(pairs, n_boot=300)
+    assert out["ci_lo"] < 0 < out["ci_hi"] and out["n_runs"] == 5 and len(out["per_run"]) == 5
