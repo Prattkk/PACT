@@ -70,11 +70,10 @@ SECONDARY = (("debate", "independent_ensemble", "Debate, 1 round"),
              ("llm_plus_anchor", "independent_ensemble", "LLM + anchor"),
              ("single_agent", "independent_ensemble", "Monolith"),
              ("single_agent_sc", "independent_ensemble", "Monolith, 5 samples"))
-GROUPS = (("sonnet", "Sonnet", ("frontier", "frontier_r2", "frontier_r3")),
-          ("haiku", "Haiku", ("frontier_haiku",) + tuple(f"frontier_haiku_r{k}" for k in range(2, 11))),
+GROUPS = (("sonnet", "Sonnet", tuple(f"frontier_r{k}" for k in range(2, 7))),
+          ("haiku", "Haiku", tuple(f"frontier_haiku_r{k}" for k in range(2, 12))),
           ("clean", "DatedGPT", ("clean",)),
-          ("haikuanon", "Haiku, masked", ("frontier_haiku_anon",)),
-          ("sonnetanon", "Sonnet, masked", ("frontier_anon",)))
+          ("haikuanon", "Haiku, masked", ("frontier_haiku_anon",)))
 MEANINGFUL_SR = 0.20  # pre-specified economically meaningful Sharpe improvement
 SECONDARY_COLS = ("sonnet", "haiku")          # columns of the secondary table
 LEVEL_COLS = ("sonnet", "haiku", "clean")     # columns of the level table
@@ -519,7 +518,7 @@ def main() -> None:
 
 
     # ---------------- mechanisms and power (scripts/analyze_mechanisms.py)
-    mech_path = TABLES_DIR / "mechanisms_frontier.json"
+    mech_path = TABLES_DIR / "mechanisms_frontier_r2.json"
     if mech_path.exists():
         mech = json.loads(mech_path.read_text())
         mrow = []
@@ -655,7 +654,7 @@ def main() -> None:
     (out / "tab_levels.tex").write_text("\n".join(lrow2) + "\n")
 
     # ---------------- compute per protocol, sensitivity, narrative decomposition
-    for gkey, reg in (("sonnet", "frontier"), ("haiku", "frontier_haiku")):
+    for gkey, reg in (("sonnet", "frontier_r2"), ("haiku", "frontier_haiku_r2")):
         mp = TABLES_DIR / f"mechanisms_{reg}.json"
         if mp.exists():
             comp = json.loads(mp.read_text()).get("compute", {})
@@ -668,8 +667,8 @@ def main() -> None:
                     N.set(tag + ".usd", plain(c["cost_usd"], 1 if c["cost_usd"] >= 1 else 2), c["cost_usd"])
                     N.set(tag + ".hours", plain(c["latency_hours"], 1), c["latency_hours"])
     crow = []
-    sp = TABLES_DIR / "mechanisms_frontier.json"
-    hp = TABLES_DIR / "mechanisms_frontier_haiku.json"
+    sp = TABLES_DIR / "mechanisms_frontier_r2.json"
+    hp = TABLES_DIR / "mechanisms_frontier_haiku_r2.json"
     comp_s = json.loads(sp.read_text()).get("compute", {}) if sp.exists() else {}
     comp_h = json.loads(hp.read_text()).get("compute", {}) if hp.exists() else {}
     for p in ("independent_ensemble", "sequential_pipeline", "pipeline_placebo", "hierarchical", "debate",
@@ -684,7 +683,7 @@ def main() -> None:
                     f"\\${c['cost_usd']:.2f}")
         crow.append(f"{LABEL[p]} & {fmt(cs)} & {fmt(ch)} \\\\")
     (out / "tab_compute.tex").write_text("\n".join(crow) + "\n")
-    for reg, gkey in (("frontier", "sonnet"), ("frontier_haiku", "haiku"), ("clean", "clean"), ("none", "none")):
+    for reg, gkey in (("frontier_r2", "sonnet"), ("frontier_haiku_r2", "haiku"), ("clean", "clean"), ("none", "none")):
         sp_ = TABLES_DIR / f"sensitivity_{reg}.json"
         if sp_.exists():
             sens = json.loads(sp_.read_text())
@@ -693,7 +692,7 @@ def main() -> None:
                     N.set(f"sens.{gkey}.{p.replace('_', '')}.tc{c}", num(v), v)
             for p, v in sens["no_btc"].items():
                 N.set(f"sens.{gkey}.{p.replace('_', '')}.nobtc", num(v), v)
-    for reg, gkey in (("frontier", "sonnet"), ("frontier_haiku", "haiku"), ("clean", "clean"), ("none", "none")):
+    for reg, gkey in (("frontier_r2", "sonnet"), ("frontier_haiku_r2", "haiku"), ("clean", "clean"), ("none", "none")):
         npath = TABLES_DIR / f"narrative_{reg}.json"
         if npath.exists():
             nd = json.loads(npath.read_text())

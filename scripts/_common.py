@@ -109,10 +109,13 @@ FRONTIER_REGIMES: dict[str, dict] = {
     "frontier": {},
     "frontier_r2": {"run_tag": "r2"},
     "frontier_r3": {"run_tag": "r3"},
+    "frontier_r4": {"run_tag": "r4"},
+    "frontier_r5": {"run_tag": "r5"},
+    "frontier_r6": {"run_tag": "r6"},
     "frontier_anon": {"anonymize": True},
     "frontier_haiku": {"model": "claude-haiku-5-5"},
-    "frontier_haiku_anon": {"model": "claude-haiku-5-5", "anonymize": True},
-    **{f"frontier_haiku_r{k}": {"model": "claude-haiku-5-5", "run_tag": f"r{k}"} for k in range(2, 11)},
+    "frontier_haiku_anon": {"model": "claude-haiku-5-5", "anonymize": True, "run_tag": "anon1"},
+    **{f"frontier_haiku_r{k}": {"model": "claude-haiku-5-5", "run_tag": f"r{k}"} for k in range(2, 12)},
 }
 
 
