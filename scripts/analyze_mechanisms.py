@@ -53,6 +53,10 @@ def years_needed(rho: float, delta: float) -> float:
 
 def load(cell: str):
     d = RAW_DIR / cell
+    meta = json.loads((d / "metadata.json").read_text())
+    fails = sum(v for k, v in meta.get("llm_stats", {}).items() if k.endswith((":call_failed", ":unparseable")))
+    if fails:
+        raise FileNotFoundError(f"{cell}: {fails} LLM calls failed or missing; cell excluded")
     ex = pd.read_parquet(d / "excess_returns.parquet").iloc[:, 0]
     w = pd.read_parquet(d / "weights.parquet")
     return ex, w
@@ -165,9 +169,13 @@ def compute_usage(regime: str) -> dict:
         # counters live in a dict so shallow copies (sample-tagged clients) share them
         def __init__(self, inner):
             self.inner, self.model = inner, inner.model
-            self.c = {"n": 0, "i": 0, "o": 0, "lat": 0.0}
+            self.c = {"n": 0, "i": 0, "o": 0, "lat": 0.0, "miss": 0}
         def complete(self, **kw):
-            r = self.inner.complete(**kw)
+            try:
+                r = self.inner.complete(**kw)
+            except Exception:
+                self.c["miss"] += 1
+                raise
             u = (r.raw or {}).get("usage") or {}
             self.c["n"] += 1
             self.c["i"] += u.get("input_tokens", 0)
@@ -189,6 +197,9 @@ def compute_usage(regime: str) -> dict:
             continue
         pi, po = PRICES.get(getattr(base, "model", ""), (0.0, 0.0))
         c = llm.c
+        if c["miss"]:               # protocol not (fully) run in this regime
+            out[p] = {"error": f"{c['miss']} calls missing from cache"}
+            continue
         out[p] = {"calls": c["n"], "input_tokens": c["i"], "output_tokens": c["o"],
                   "cost_usd": c["i"] * pi + c["o"] * po, "latency_hours": c["lat"] / 3600}
     return out
