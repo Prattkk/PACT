@@ -316,6 +316,16 @@ def main() -> None:
         u = ms["sonnet"]["compute"]["independent_ensemble"]
         N["cost.ratshare"] = pct(u["rationale_calls"] / u["calls"])
 
+    # ---- placebo mappings, DatedGPT 2022-2024 (cyclic shift + five random derangements) ---------
+    ps = J("placebo_seeds_b")
+    if ps:
+        pl = [v["diff"] for k, v in ps.items() if k.startswith("pipeline_placebo")]
+        N["seeds.b.n"], N["seeds.b.min"], N["seeds.b.max"] = str(len(pl)), num(min(pl)), num(max(pl))
+        N["seeds.b.median"] = num(float(np.median(pl)))
+        pipe = ps["sequential_pipeline"]["diff"]
+        N["seeds.b.pipe"] = num(pipe)
+        N["seeds.b.below"] = str(sum(x < pipe for x in pl))
+
     (out / "numbers_v2.tex").write_text("".join(f"\\pactdef{{{k}}}{{{v}}}\n" for k, v in sorted(N.items())))
     print(f"{len(N)} numbers; files in {out}")
 

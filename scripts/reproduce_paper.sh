@@ -32,6 +32,7 @@ for p in $M pipeline_placebo_s1 pipeline_placebo_s2; do cellc clean $p --offline
 python -m scripts.analyze_robustness       # block lengths, equivalence classes, simultaneous intervals
 python -m scripts.validate_bootstrap       # simulation check of the multi-run bootstrap (CPU, ~1 h)
 python -m scripts.analyze_factorial        # communication x adjudication contrasts
+python -m scripts.analyze_placebo_seeds    # six placebo mappings, DatedGPT 2022-2024
 python -m scripts.analyze_decision_flow --window b
 python -m scripts.analyze_decision_flow --window b --protocols debate --tag _debate --groups sonnet haiku
 python -m scripts.analyze_disagreement --window b
@@ -42,4 +43,5 @@ python -m scripts.analyze_disagreement --window c --groups clean
 # hours; their outputs are archived in results/tables/datedgpt_checks.json.
 python -m scripts.build_manifest           # -> docs/run_manifest.json (cells, prompt and data hashes)
 python -m scripts.export_paper             # -> results/paper_tex/ (numbers.tex, tab_*.tex)
+# (maintainers: python -m scripts.build_cache_release rebuilds release/confirmatory_llm_cache.tar.gz)
 python -m scripts.export_v2                # -> results/paper_tex/ (numbers_v2.tex, tab_main2/unused/cost2, fig_flow.pdf)

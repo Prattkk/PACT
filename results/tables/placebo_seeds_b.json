@@ -1,0 +1,65 @@
+{
+ "pipeline_placebo": {
+  "diff": -0.27592740120342235,
+  "ci": [
+   -0.6226497425083649,
+   0.05767311490634503
+  ],
+  "class": "meaningful gain excluded",
+  "fails": 0
+ },
+ "sequential_pipeline": {
+  "diff": -0.17605498659433094,
+  "ci": [
+   -0.4925960941383311,
+   0.11916926685713584
+  ],
+  "class": "meaningful gain excluded",
+  "fails": 0
+ },
+ "pipeline_placebo_s1": {
+  "diff": -0.4535860547759358,
+  "ci": [
+   -0.7957887492789633,
+   -0.11382373480368695
+  ],
+  "class": "meaningful gain excluded",
+  "fails": 0
+ },
+ "pipeline_placebo_s2": {
+  "diff": 0.19299782917971997,
+  "ci": [
+   -0.12178554019145382,
+   0.5283513440508367
+  ],
+  "class": "inconclusive",
+  "fails": 0
+ },
+ "pipeline_placebo_s3": {
+  "diff": -0.16810481314385872,
+  "ci": [
+   -0.5087180311325352,
+   0.18005380292733855
+  ],
+  "class": "meaningful gain excluded",
+  "fails": 0
+ },
+ "pipeline_placebo_s4": {
+  "diff": -0.20872837414231749,
+  "ci": [
+   -0.5915541071813191,
+   0.1812971632859937
+  ],
+  "class": "meaningful gain excluded",
+  "fails": 0
+ },
+ "pipeline_placebo_s5": {
+  "diff": 0.08090430210696065,
+  "ci": [
+   -0.31036059129891963,
+   0.45481530542960896
+  ],
+  "class": "inconclusive",
+  "fails": 0
+ }
+}
