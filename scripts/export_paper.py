@@ -611,7 +611,7 @@ def main() -> None:
                 q = qmap.get((lab, gkey), float("nan"))
                 star = "$^{*}$" if q < 0.05 else ""
                 runs = f" {{\\tiny({int(round(r['share_positive'] * r['n_runs']))}/{r['n_runs']})}}" if r["n_runs"] > 1 else ""
-                cols.append(f"{num(r['diff'])}{star} {{\\tiny{interval(r['ci_lo'], r['ci_hi'])}}}{runs}")
+                cols.append(f"\\makecell{{{num(r['diff'])}{star}{runs}\\\\ {{\\tiny{interval(r['ci_lo'], r['ci_hi'])}}}}}")
                 tag = f"m.{gkey}.{a_.replace('_', '')}.{b_.replace('_', '')}"
                 N.set(tag + ".diff", num(r["diff"]), r["diff"])
                 N.set(tag + ".lo", num(r["ci_lo"]), r["ci_lo"])
@@ -628,6 +628,9 @@ def main() -> None:
         N.set(f"fam.{'main' if fam is MATCHED else 'sec'}.nsig", str(sum(1 for q in allq if q < 0.05)),
               sum(1 for q in allq if q < 0.05))
         N.set(f"fam.{'main' if fam is MATCHED else 'sec'}.ntests", str(len(allq)), len(allq))
+        if fam is SECONDARY:
+            sec_res = {(a_, g): cellsfmt.get((lab, g)) for a_, b_, lab in fam for g in SECONDARY_COLS}
+            sec_q = {(a_, g): qmap.get((lab, g), float("nan")) for a_, b_, lab in fam for g in SECONDARY_COLS}
         nexcl = sum(1 for v in cellsfmt.values() if v and v["ci_hi"] < MEANINGFUL_SR)
         N.set(f"fam.{'main' if fam is MATCHED else 'sec'}.nexcl", str(nexcl), nexcl)
     (out / "tab_matched.tex").write_text("\n".join(mrow) + "\n")
@@ -635,6 +638,26 @@ def main() -> None:
     for gkey, glabel, regs in GROUPS:
         n_runs = len({r for (r, p) in group_cells.get(gkey, {}) if p == "independent_ensemble"})
         N.set(f"group.{gkey}.nruns", str(n_runs), n_runs)
+    # ranking stability of the four matched protocols across runs
+    from collections import Counter
+    four = ("independent_ensemble", "sequential_pipeline", "pipeline_placebo", "hierarchical")
+    for gkey, glabel, regs in GROUPS:
+        gc = group_cells.get(gkey, {})
+        orders = []
+        for r in regs:
+            if all((r, p) in gc for p in four):
+                srs = {p: sharpe(gc[(r, p)]["excess_returns"]) for p in four}
+                orders.append(tuple(sorted(four, key=lambda p: -srs[p])))
+        if len(orders) > 1:
+            top, n_top = Counter(orders).most_common(1)[0]
+            N.set(f"rank.{gkey}.nmodal", str(n_top), n_top)
+            N.set(f"rank.{gkey}.norders", str(len(set(orders))), len(set(orders)))
+            N.set(f"rank.{gkey}.nfirst", str(Counter(o[0] for o in orders).most_common(1)[0][1]),
+                  Counter(o[0] for o in orders).most_common(1)[0][1])
+            N.set(f"rank.{gkey}.first", LABEL[Counter(o[0] for o in orders).most_common(1)[0][0]].lower(), 0)
+            N.set(f"rank.{gkey}.nlast", str(Counter(o[-1] for o in orders).most_common(1)[0][1]),
+                  Counter(o[-1] for o in orders).most_common(1)[0][1])
+            N.set(f"rank.{gkey}.last", LABEL[Counter(o[-1] for o in orders).most_common(1)[0][0]].lower(), 0)
     N.set("meaningful.sr", plain(MEANINGFUL_SR), MEANINGFUL_SR)
     # level table: Sharpe per protocol and group (mean over runs)
     lrow2 = []
@@ -650,7 +673,15 @@ def main() -> None:
             m = float(np.mean(vals))
             cols.append(num(m) + (f" {{\\tiny({plain(float(np.std(vals, ddof=1)))})}}" if len(vals) > 1 else ""))
             N.set(f"lvl.{gkey}.{p.replace('_', '')}", num(m), m)
-        lrow2.append(f"{LABEL[p]} & " + " & ".join(cols) + r" \\")
+        dcols = []
+        for g in SECONDARY_COLS:
+            r = sec_res.get((p, g)) if p in {x[0] for x in SECONDARY} else None
+            if r is None:
+                dcols.append("--")
+            else:
+                star = "$^{*}$" if sec_q.get((p, g), 1.0) < 0.05 else ""
+                dcols.append(f"\\makecell{{{num(r['diff'])}{star}\\\\ {{\\tiny{interval(r['ci_lo'], r['ci_hi'])}}}}}")
+        lrow2.append(f"{LABEL[p]} & " + " & ".join(cols + dcols) + r" \\")
     (out / "tab_levels.tex").write_text("\n".join(lrow2) + "\n")
 
     # ---------------- compute per protocol, sensitivity, narrative decomposition
