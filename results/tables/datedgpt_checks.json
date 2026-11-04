@@ -1,0 +1,45 @@
+{
+ "n_calls": 471,
+ "C1": {
+  "agreement_by_agent": {
+   "You are the Fundamen": 0.5116772823779193,
+   "You are the Macro Re": 0.3777070063694268,
+   "You are the Narrativ": 0.5121019108280255
+  },
+  "agreement": 0.46031357177853993,
+  "pass": true
+ },
+ "C2": {
+  "n_calls": 120,
+  "median_rank_corr_shuffle": 0.6286293882524427,
+  "share_directions_changed_other_week": 0.26826923076923076,
+  "pass_a": false,
+  "pass_b": true
+ },
+ "C3": {
+  "2021": {
+   "correct": 19,
+   "n": 40,
+   "share": 0.475,
+   "pass": false
+  },
+  "2022": {
+   "correct": 25,
+   "n": 40,
+   "share": 0.625,
+   "pass": false
+  },
+  "2023": {
+   "correct": 30,
+   "n": 40,
+   "share": 0.75,
+   "pass": true
+  }
+ },
+ "C4": {
+  "correct": 18,
+  "n": 30,
+  "share": 0.6,
+  "pass": false
+ }
+}

@@ -202,63 +202,90 @@
       "input_tokens": 923443,
       "output_tokens": 675278,
       "cost_usd": 0.42998329999999996,
-      "latency_hours": 1.1486022222222227
+      "latency_hours": 1.1486022222222227,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 471,
+      "cost_usd_excl_rationale": 0.2749584
     },
     "single_agent": {
       "calls": 157,
       "input_tokens": 1223642,
       "output_tokens": 284977,
       "cost_usd": 0.2648527,
-      "latency_hours": 0.3432888888888888
+      "latency_hours": 0.3432888888888888,
+      "rationale_calls": 0,
+      "calls_excl_rationale": 157,
+      "cost_usd_excl_rationale": 0.2648527
     },
     "single_agent_sc": {
       "calls": 785,
       "input_tokens": 6118210,
       "output_tokens": 1432261,
       "cost_usd": 1.3279515,
-      "latency_hours": 1.7365936111111109
+      "latency_hours": 1.7365936111111109,
+      "rationale_calls": 0,
+      "calls_excl_rationale": 785,
+      "cost_usd_excl_rationale": 1.3279515
     },
     "sequential_pipeline": {
       "calls": 2198,
       "input_tokens": 1098019,
       "output_tokens": 826493,
       "cost_usd": 0.5230484,
-      "latency_hours": 1.3512963888888871
+      "latency_hours": 1.3512963888888871,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 628,
+      "cost_usd_excl_rationale": 0.36802349999999995
     },
     "pipeline_placebo": {
       "calls": 2198,
       "input_tokens": 1098019,
       "output_tokens": 829948,
       "cost_usd": 0.5247759,
-      "latency_hours": 1.3556724999999987
+      "latency_hours": 1.3556724999999987,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 628,
+      "cost_usd_excl_rationale": 0.369751
     },
     "hierarchical": {
       "calls": 2041,
       "input_tokens": 923443,
       "output_tokens": 675278,
       "cost_usd": 0.42998329999999996,
-      "latency_hours": 1.1486022222222227
+      "latency_hours": 1.1486022222222227,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 471,
+      "cost_usd_excl_rationale": 0.2749584
     },
     "debate": {
       "calls": 3611,
       "input_tokens": 2041519,
       "output_tokens": 1301839,
       "cost_usd": 0.8550713999999999,
-      "latency_hours": 2.2811094444444397
+      "latency_hours": 2.2811094444444397,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 2041,
+      "cost_usd_excl_rationale": 0.7000464999999999
     },
     "debate_multiround": {
       "calls": 6859,
       "input_tokens": 7695384,
       "output_tokens": 2373303,
       "cost_usd": 1.9561899,
-      "latency_hours": 4.247994166666657
+      "latency_hours": 4.247994166666657,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 5289,
+      "cost_usd_excl_rationale": 1.801165
     },
     "llm_plus_anchor": {
       "calls": 3611,
       "input_tokens": 2680472,
       "output_tokens": 1206548,
       "cost_usd": 0.8713211999999999,
-      "latency_hours": 2.1289930555555534
+      "latency_hours": 2.1289930555555534,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 2041,
+      "cost_usd_excl_rationale": 0.7162963
     }
   }
 }

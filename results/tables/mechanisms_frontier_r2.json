@@ -194,49 +194,70 @@
       "input_tokens": 923443,
       "output_tokens": 690105,
       "cost_usd": 8.747936000000001,
-      "latency_hours": 1.9030113888888889
+      "latency_hours": 1.9030113888888889,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 471,
+      "cost_usd_excl_rationale": 5.2672680000000005
     },
     "single_agent": {
       "calls": 157,
       "input_tokens": 1223642,
       "output_tokens": 195699,
       "cost_usd": 4.404274,
-      "latency_hours": 0.39271027777777784
+      "latency_hours": 0.39271027777777784,
+      "rationale_calls": 0,
+      "calls_excl_rationale": 157,
+      "cost_usd_excl_rationale": 4.404274
     },
     "single_agent_sc": {
       "calls": 785,
       "input_tokens": 6118210,
       "output_tokens": 978791,
       "cost_usd": 22.02433,
-      "latency_hours": 1.9721636111111118
+      "latency_hours": 1.9721636111111118,
+      "rationale_calls": 0,
+      "calls_excl_rationale": 785,
+      "cost_usd_excl_rationale": 22.02433
     },
     "sequential_pipeline": {
       "calls": 2198,
       "input_tokens": 1097969,
       "output_tokens": 852952,
       "cost_usd": 10.725458000000001,
-      "latency_hours": 2.2408874999999986
+      "latency_hours": 2.2408874999999986,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 628,
+      "cost_usd_excl_rationale": 7.244790000000001
     },
     "pipeline_placebo": {
       "calls": 2198,
       "input_tokens": 1097969,
       "output_tokens": 852615,
       "cost_usd": 10.722088000000001,
-      "latency_hours": 2.2461216666666663
+      "latency_hours": 2.2461216666666663,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 628,
+      "cost_usd_excl_rationale": 7.241420000000001
     },
     "hierarchical": {
       "calls": 2041,
       "input_tokens": 923443,
       "output_tokens": 690105,
       "cost_usd": 8.747936000000001,
-      "latency_hours": 1.9030113888888889
+      "latency_hours": 1.9030113888888889,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 471,
+      "cost_usd_excl_rationale": 5.2672680000000005
     },
     "debate": {
       "calls": 3608,
       "input_tokens": 2002205,
       "output_tokens": 1175848,
       "cost_usd": 15.76289,
-      "latency_hours": 3.3854425000000066
+      "latency_hours": 3.3854425000000066,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 2038,
+      "cost_usd_excl_rationale": 12.282222
     },
     "debate_multiround": {
       "error": "2582 calls missing from cache"
@@ -246,7 +267,10 @@
       "input_tokens": 2680467,
       "output_tokens": 1060507,
       "cost_usd": 15.966004000000002,
-      "latency_hours": 3.131911666666667
+      "latency_hours": 3.131911666666667,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 2041,
+      "cost_usd_excl_rationale": 12.485336
     }
   }
 }
