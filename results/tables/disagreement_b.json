@@ -1,0 +1,138 @@
+{
+ "median": 0.6666666666666667,
+ "share_high_instrument_weeks": 0.23821656050955414,
+ "groups": {
+  "sonnet": {
+   "sequential_pipeline": {
+    "high": {
+     "instrument_days": 1796.0,
+     "mean_abs_weight_diff": 0.012062261345103286,
+     "ann_contribution": -0.004339307880487258,
+     "mean_abs_daily_contribution_bp": 0.8156417102322762
+    },
+    "low": {
+     "instrument_days": 5684.0,
+     "mean_abs_weight_diff": 0.0180567215134222,
+     "ann_contribution": -0.0061154128331248935,
+     "mean_abs_daily_contribution_bp": 1.530238565270603
+    }
+   },
+   "pipeline_placebo": {
+    "high": {
+     "instrument_days": 1796.0,
+     "mean_abs_weight_diff": 0.01588216924869331,
+     "ann_contribution": 0.0006457312229717164,
+     "mean_abs_daily_contribution_bp": 1.0588875389101755
+    },
+    "low": {
+     "instrument_days": 5684.0,
+     "mean_abs_weight_diff": 0.020189023471091323,
+     "ann_contribution": -0.01624986641563205,
+     "mean_abs_daily_contribution_bp": 1.6748239490921328
+    }
+   },
+   "hierarchical": {
+    "high": {
+     "instrument_days": 1796.0,
+     "mean_abs_weight_diff": 0.010421598984933559,
+     "ann_contribution": -0.0014662720048039747,
+     "mean_abs_daily_contribution_bp": 0.7241621232527862
+    },
+    "low": {
+     "instrument_days": 5684.0,
+     "mean_abs_weight_diff": 0.007403422708969122,
+     "ann_contribution": 0.008198541673162899,
+     "mean_abs_daily_contribution_bp": 0.7590718872658894
+    }
+   }
+  },
+  "haiku": {
+   "sequential_pipeline": {
+    "high": {
+     "instrument_days": 1796.0,
+     "mean_abs_weight_diff": 0.015140099418974536,
+     "ann_contribution": -0.0008964967636889214,
+     "mean_abs_daily_contribution_bp": 1.0148422475361305
+    },
+    "low": {
+     "instrument_days": 5684.0,
+     "mean_abs_weight_diff": 0.023934698697730593,
+     "ann_contribution": -0.014645041622410765,
+     "mean_abs_daily_contribution_bp": 1.9731297960937493
+    }
+   },
+   "pipeline_placebo": {
+    "high": {
+     "instrument_days": 1796.0,
+     "mean_abs_weight_diff": 0.024649303301889094,
+     "ann_contribution": -0.002212055197522666,
+     "mean_abs_daily_contribution_bp": 1.6495202983956858
+    },
+    "low": {
+     "instrument_days": 5684.0,
+     "mean_abs_weight_diff": 0.02811233777671559,
+     "ann_contribution": -0.008043779618147385,
+     "mean_abs_daily_contribution_bp": 2.1549864900232802
+    }
+   },
+   "hierarchical": {
+    "high": {
+     "instrument_days": 1796.0,
+     "mean_abs_weight_diff": 0.008994291180144545,
+     "ann_contribution": -0.0015163085325768794,
+     "mean_abs_daily_contribution_bp": 0.5070404252318348
+    },
+    "low": {
+     "instrument_days": 5684.0,
+     "mean_abs_weight_diff": 0.00424251776028607,
+     "ann_contribution": 0.0013151560218193387,
+     "mean_abs_daily_contribution_bp": 0.40146707510781593
+    }
+   }
+  },
+  "clean": {
+   "sequential_pipeline": {
+    "high": {
+     "instrument_days": 1796.0,
+     "mean_abs_weight_diff": 0.034324156347999554,
+     "ann_contribution": -0.0077448276339311325,
+     "mean_abs_daily_contribution_bp": 2.590062820746926
+    },
+    "low": {
+     "instrument_days": 5684.0,
+     "mean_abs_weight_diff": 0.03667802074169447,
+     "ann_contribution": -0.02433513078671847,
+     "mean_abs_daily_contribution_bp": 3.9391653618126217
+    }
+   },
+   "pipeline_placebo": {
+    "high": {
+     "instrument_days": 1796.0,
+     "mean_abs_weight_diff": 0.04452288247859947,
+     "ann_contribution": -0.025176765371336583,
+     "mean_abs_daily_contribution_bp": 3.309535984996069
+    },
+    "low": {
+     "instrument_days": 5684.0,
+     "mean_abs_weight_diff": 0.05011663096187211,
+     "ann_contribution": -0.013939334472606311,
+     "mean_abs_daily_contribution_bp": 4.675885251733409
+    }
+   },
+   "hierarchical": {
+    "high": {
+     "instrument_days": 1796.0,
+     "mean_abs_weight_diff": 0.005774133085108413,
+     "ann_contribution": -0.0027728063794477107,
+     "mean_abs_daily_contribution_bp": 0.4524994990167409
+    },
+    "low": {
+     "instrument_days": 5684.0,
+     "mean_abs_weight_diff": 0.0074899103889226135,
+     "ann_contribution": -0.005655595178229148,
+     "mean_abs_daily_contribution_bp": 0.723758935093751
+    }
+   }
+  }
+ }
+}

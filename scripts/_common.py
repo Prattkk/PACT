@@ -140,6 +140,10 @@ def build_llm_client(regime: str, offline: bool = False, cutoff_year: int | None
         from llm.datedgpt_scorer import DatedGPTScorer
 
         return DatedGPTScorer(offline=offline)
+    if regime == "clean_nameonly":          # diagnostic: asset names only (pre-registration v2, C1)
+        from llm.datedgpt_scorer import NameOnlyScorer
+
+        return NameOnlyScorer(offline=offline)
     if regime in FRONTIER_REGIMES:
         # Default frontier model is Claude; set PACT_FRONTIER=gpt4o for the old GPT-4o path.
         import os

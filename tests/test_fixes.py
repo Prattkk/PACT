@@ -329,3 +329,36 @@ def test_seeded_placebo_is_fixed_derangement_and_frozen_placebo_unchanged():
         a = [v.instrument for v in _derange(dec, syms, k).views]
         assert a == [v.instrument for v in _derange(dec, syms, k).views]   # deterministic
         assert all(x != y for x, y in zip(syms, a)) and sorted(a) == sorted(syms)
+
+
+def test_orders_execute_at_next_session_close(monkeypatch):
+    """A view formed on decision day t is traded at the close of t+1 and earns returns from t+2."""
+    from datetime import date
+    import backtest.engine as E
+    from agents.base_agent import InstrumentView
+    from coordination.base import CoordinationProtocol, CoordinationResult
+
+    idx = pd.bdate_range("2023-01-02", "2023-03-31")
+    px = pd.DataFrame({"A": 100 * np.cumprod(np.r_[1.0, np.full(len(idx) - 1, 1.001)]),
+                       "B": 100.0}, index=idx)
+    monkeypatch.setattr(E, "fetch_panel", lambda syms, s, e, field="Adj Close": px[[c for c in syms if c in px]])
+    monkeypatch.setattr(E, "fetch_risk_free_daily", lambda index: pd.Series(0.0, index=index))
+
+    class Long(CoordinationProtocol):
+        name = "long_a"
+
+        def __init__(self):
+            super().__init__({})
+
+        def run(self, as_of):
+            return CoordinationResult(protocol=self.name, as_of=as_of, final_views=[
+                InstrumentView(instrument="A", direction=1, conviction=1.0, horizon="1w"),
+                InstrumentView(instrument="B", direction=0, conviction=0.0, horizon="1w")])
+    cfg = E.BacktestConfig(start=date(2023, 2, 1), end=date(2023, 3, 31), rebalance_freq="W-FRI",
+                           transaction_cost_bps_roundtrip=0.0)
+    res = E.run_backtest(Long(), ("A", "B"), cfg)
+    first_dec = E.decision_dates(px.index, cfg.start, cfg.end, "W-FRI")[0]
+    nxt = res.weights.index[res.weights.index.get_loc(first_dec) + 1]
+    assert res.weights.loc[first_dec, "A"] == 0.0            # nothing held on the decision day
+    assert res.weights.loc[nxt, "A"] > 0.0                   # bought at the next session's close
+    assert np.isclose(res.excess_returns.loc[nxt], 0.0)      # no return earned on the trade day itself

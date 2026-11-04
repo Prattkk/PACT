@@ -137,6 +137,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--window", default="b")
     ap.add_argument("--groups", nargs="+", default=list(GROUPS))
+    ap.add_argument("--protocols", nargs="+", default=list(MATCHED))
+    ap.add_argument("--tag", default="")
     a = ap.parse_args()
     # decision-time disagreement from the deterministic anchors
     base = capture("none", "independent_ensemble", a.window)
@@ -150,14 +152,14 @@ def main() -> None:
     res = {"disagreement_median": med, "share_high": float(high.to_numpy().mean()), "groups": {}}
     for g in a.groups:
         regs = GROUPS[g] if a.window == "b" else (["clean"] if g == "clean" else [])
-        per = {p: [] for p in MATCHED}
+        per = {p: [] for p in a.protocols}
         for r in regs:
             e = capture(r, "independent_ensemble", a.window)
-            for p in MATCHED:
+            for p in a.protocols:
                 per[p].append(compare(e, capture(r, p, a.window), high))
             print(g, r, "done", flush=True)
         res["groups"][g] = {p: {"runs": v, "mean": _mean(v)} for p, v in per.items() if v}
-    (TABLES_DIR / f"decision_flow_{a.window}.json").write_text(json.dumps(res, indent=1, default=float))
+    (TABLES_DIR / f"decision_flow_{a.window}{a.tag}.json").write_text(json.dumps(res, indent=1, default=float))
     print(json.dumps({g: {p: x["mean"] for p, x in d.items()} for g, d in res["groups"].items()}, indent=1, default=float)[:6000])
 
 

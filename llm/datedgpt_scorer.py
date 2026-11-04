@@ -37,7 +37,13 @@ log = get_logger(__name__)
 
 REPO = "datedgpt/datedgpt-{y}-instruct"
 # Hugging Face commit SHAs pinned for reproducibility
-REVISIONS = {2021: "ac1b847bf836e2168af1a468f487b1f39e8c75c5",
+REVISIONS = {2015: "09dcadf9e2c091ec5b9ab5edf58c284cd3250469",   # 2015-2020: unused-period run (pre-registration v2)
+             2016: "8d66e16b20f44fa6c0fb6083f91789af1523a989",
+             2017: "aa95ea00fca700811f3d14e9991ef59101182376",
+             2018: "05ad5bb33bb859ee5f979cca96812eb5a14384a7",
+             2019: "a1d6689fd350fff2b969860762b89f25df899f57",
+             2020: "407cf0c746be710a268e0ed54c012d43d0453b6c",
+             2021: "ac1b847bf836e2168af1a468f487b1f39e8c75c5",
              2022: "3fde1bcb0e69c363a786c93320e76b32d34ea5cc",
              2023: "7314fa3e58a921c9b0cd3e320cf3f44145b94e5c"}
 SCORER_VERSION = "scorer-v1"
@@ -148,3 +154,27 @@ class DatedGPTScorer(LLMClient):
         payload_out = {"text": text, "log_odds": scores, "vintage": vintage, "scorer": SCORER_VERSION}
         write_cache(self.model, h, canonical, payload_out)
         return LLMResponse(text=text, model=self.model, prompt_hash=h, raw=payload_out, cached=False)
+
+
+class NameOnlyScorer(DatedGPTScorer):
+    """Diagnostic (pre-registration v2, C1): the same scorer asked with the asset description
+    only, no factors and no anchor, so its views are the vintage's fixed instrument tilt."""
+
+    def __init__(self, offline: bool = False) -> None:
+        super().__init__(offline=offline)
+        self.model = f"datedgpt-instruct-nameonly-{SCORER_VERSION}"
+        self._memo: dict[tuple[int, str], float] = {}
+
+    @staticmethod
+    def questions(system: str, payload: dict) -> dict[str, str]:
+        spec = next((v for k, v in AGENTS.items() if system.startswith(k)), None)
+        if spec is None:
+            raise NotImplementedError("clean regime supports multi-instrument specialist calls only")
+        full = DatedGPTScorer.questions(system, payload)          # same instrument set as the real call
+        return {s: f"Asset: {s} ({DESCRIPTIONS[s]}).\nOver the next {spec[2]}, should an investor be long or short this asset?"
+                for s in full}
+
+    def _log_odds(self, vintage: int, question: str) -> float:
+        if (vintage, question) not in self._memo:
+            self._memo[(vintage, question)] = super()._log_odds(vintage, question)
+        return self._memo[(vintage, question)]
