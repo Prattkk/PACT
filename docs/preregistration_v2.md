@@ -87,3 +87,10 @@ instrument-weeks. Tested once on the Claude runs; validated on DatedGPT 2016-202
 
 Calls, tokens and cost per protocol recomputed excluding the technical specialist's rationale
 calls (which never change a position).
+
+## Amendment 1 (committed before any check below was run)
+
+Measured scorer speed on this machine is 2-10 s per forward pass, so to finish before the
+deadline: C2 (both perturbations) uses every fourth decision week (40 weeks, the 1st, 5th,
+9th, ... decision); the five random-derangement placebos run on 2022-2024, and seeds 1-2 also
+on 2016-2021. Nothing else changes.

@@ -106,7 +106,7 @@ def run_cell(
 
 def main() -> None:
     p = argparse.ArgumentParser(description="Run the 7×2 coordination ablation matrix.")
-    p.add_argument("--window", choices=["a", "b"], default="a", help="window_a (full) or window_b (modern)")
+    p.add_argument("--window", choices=["a", "b", "c"], default="a", help="window_a (full), window_b (modern) or window_c (unused 2016-2021)")
     p.add_argument("--regime", default="all")
     p.add_argument("--protocol", default="all", help="protocol key from coordination.REGISTRY, or 'all'")
     p.add_argument("--quick", action="store_true", help="1y window, 5 ETFs, regime=none — sanity check")

@@ -169,7 +169,7 @@ def compute_usage(regime: str) -> dict:
         # counters live in a dict so shallow copies (sample-tagged clients) share them
         def __init__(self, inner):
             self.inner, self.model = inner, inner.model
-            self.c = {"n": 0, "i": 0, "o": 0, "lat": 0.0, "miss": 0}
+            self.c = {"n": 0, "i": 0, "o": 0, "lat": 0.0, "miss": 0, "rn": 0, "ri": 0, "ro": 0}
         def complete(self, **kw):
             try:
                 r = self.inner.complete(**kw)
@@ -180,6 +180,10 @@ def compute_usage(regime: str) -> dict:
             self.c["n"] += 1
             self.c["i"] += u.get("input_tokens", 0)
             self.c["o"] += u.get("output_tokens", 0)
+            if kw.get("system", "").startswith("You are a terse technical-analysis explainer"):
+                self.c["rn"] += 1            # rationale only: never changes a position
+                self.c["ri"] += u.get("input_tokens", 0)
+                self.c["ro"] += u.get("output_tokens", 0)
             self.c["lat"] += (r.raw or {}).get("latency_s", 0.0) or 0.0
             return r
 
@@ -201,7 +205,10 @@ def compute_usage(regime: str) -> dict:
             out[p] = {"error": f"{c['miss']} calls missing from cache"}
             continue
         out[p] = {"calls": c["n"], "input_tokens": c["i"], "output_tokens": c["o"],
-                  "cost_usd": c["i"] * pi + c["o"] * po, "latency_hours": c["lat"] / 3600}
+                  "cost_usd": c["i"] * pi + c["o"] * po, "latency_hours": c["lat"] / 3600,
+                  "rationale_calls": c["rn"],
+                  "calls_excl_rationale": c["n"] - c["rn"],
+                  "cost_usd_excl_rationale": (c["i"] - c["ri"]) * pi + (c["o"] - c["ro"]) * po}
     return out
 
 

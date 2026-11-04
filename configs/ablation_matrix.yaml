@@ -48,6 +48,10 @@ window_b:           # spec §6.4: modern window
   start: "2022-01-01"
   end:   "2024-12-31"
   alt_data: true    # WITH Polymarket
+window_c:           # pre-registration v2: unused period (all instruments have 400 days of history)
+  start: "2016-01-01"
+  end:   "2021-12-31"
+  alt_data: true
 
 walk_forward:
   train_years: 3

@@ -62,6 +62,7 @@ class PlaceboPipelineProtocol(SequentialPipelineProtocol):
     adding a cross-asset voter."""
 
     name = "pipeline_placebo"
+    seed: int | None = None
 
     def run(self, as_of: date) -> CoordinationResult:
         decisions: list[AgentDecision] = []
@@ -70,7 +71,7 @@ class PlaceboPipelineProtocol(SequentialPipelineProtocol):
         decisions.extend([macro, narrative])
         xat = self.agents["cross_asset_transmission"]
         if hasattr(xat, "set_upstream"):
-            xat.set_upstream(_derange(macro, self.universe), _derange(narrative, self.universe))
+            xat.set_upstream(_derange(macro, self.universe, self.seed), _derange(narrative, self.universe, self.seed))
         decisions.append(xat.run(as_of))
         decisions.append(self.agents["technical_trend"].run(as_of))
         decisions.append(self.agents["fundamentals_carry"].run(as_of))
@@ -83,10 +84,28 @@ class PlaceboPipelineProtocol(SequentialPipelineProtocol):
                                   per_agent_decisions=decisions + [pm_decision])
 
 
-def _derange(decision: AgentDecision, universe: tuple[str, ...]) -> AgentDecision:
-    """Relabel each view with the next instrument in the universe (cyclic shift)."""
+def _derange(decision: AgentDecision, universe: tuple[str, ...], seed: int | None = None) -> AgentDecision:
+    """Relabel each view with another instrument: the next one in the universe (cyclic shift,
+    the frozen placebo) or, with `seed`, a fixed random derangement (diagnostic placebos)."""
     syms = list(universe)
-    nxt = {s: syms[(i + 1) % len(syms)] for i, s in enumerate(syms)}
+    if seed is None:
+        nxt = {s: syms[(i + 1) % len(syms)] for i, s in enumerate(syms)}
+    else:
+        import random
+        rng = random.Random(seed)
+        while True:
+            perm = syms[:]
+            rng.shuffle(perm)
+            if all(a != b for a, b in zip(syms, perm)):
+                break
+        nxt = dict(zip(syms, perm))
     views = [v.model_copy(update={"instrument": nxt[v.instrument]}) if v.instrument in nxt else v
              for v in decision.views]
     return decision.model_copy(update={"views": views})
+
+
+def _seeded_placebo(k: int):
+    return type(f"PlaceboPipelineSeed{k}", (PlaceboPipelineProtocol,), {"name": f"pipeline_placebo_s{k}", "seed": k})
+
+
+SEEDED_PLACEBOS = {f"pipeline_placebo_s{k}": _seeded_placebo(k) for k in range(1, 6)}

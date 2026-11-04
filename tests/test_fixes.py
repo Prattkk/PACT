@@ -314,3 +314,18 @@ def test_multirun_sharpe_diff_covers_true_zero():
              for _ in range(5)]
     out = multirun_sharpe_diff(pairs, n_boot=300)
     assert out["ci_lo"] < 0 < out["ci_hi"] and out["n_runs"] == 5 and len(out["per_run"]) == 5
+
+
+def test_seeded_placebo_is_fixed_derangement_and_frozen_placebo_unchanged():
+    from datetime import date
+    from agents.base_agent import AgentDecision, InstrumentView
+    from coordination.sequential_pipeline import _derange
+    syms = ("SPY", "QQQ", "IWM", "IEF", "SHY", "GLD", "USO", "UUP", "EEM", "BTC")
+    dec = AgentDecision(agent_name="m", as_of=date(2022, 1, 7),
+                        views=[InstrumentView(instrument=s, direction=1, conviction=0.5, horizon="1w") for s in syms])
+    cyc = [v.instrument for v in _derange(dec, syms).views]
+    assert cyc == list(syms[1:]) + [syms[0]]                      # frozen cyclic shift
+    for k in range(1, 6):
+        a = [v.instrument for v in _derange(dec, syms, k).views]
+        assert a == [v.instrument for v in _derange(dec, syms, k).views]   # deterministic
+        assert all(x != y for x, y in zip(syms, a)) and sorted(a) == sorted(syms)
