@@ -1,0 +1,135 @@
+{
+ "sonnet": {
+  "mean": {
+   "ann_total": 0.031103771116110613,
+   "ann_sign_differs": 0.018956429122120366,
+   "ann_same_sign": 0.012147341993990247,
+   "share_instrument_days_sign_differs": 0.07039893617021277,
+   "share_of_total_from_same_sign": 0.39054241843036097,
+   "runs_same_sign_positive": 5,
+   "runs_sign_differs_positive": 5,
+   "n_runs": 5
+  },
+  "runs": [
+   {
+    "run": "frontier_r2",
+    "ann_total": 0.035362451840691825,
+    "ann_sign_differs": 0.022586754728325453,
+    "ann_same_sign": 0.012775697112366372,
+    "share_instrument_days_sign_differs": 0.06954787234042553
+   },
+   {
+    "run": "frontier_r3",
+    "ann_total": 0.024177047250900967,
+    "ann_sign_differs": 0.011118216779760104,
+    "ann_same_sign": 0.013058830471140863,
+    "share_instrument_days_sign_differs": 0.07034574468085106
+   },
+   {
+    "run": "frontier_r4",
+    "ann_total": 0.03202880914124406,
+    "ann_sign_differs": 0.013712131496968965,
+    "ann_same_sign": 0.0183166776442751,
+    "share_instrument_days_sign_differs": 0.06928191489361703
+   },
+   {
+    "run": "frontier_r5",
+    "ann_total": 0.03097505965044928,
+    "ann_sign_differs": 0.02159990209910357,
+    "ann_same_sign": 0.00937515755134571,
+    "share_instrument_days_sign_differs": 0.06861702127659575
+   },
+   {
+    "run": "frontier_r6",
+    "ann_total": 0.03297548769726692,
+    "ann_sign_differs": 0.025765140506443737,
+    "ann_same_sign": 0.007210347190823186,
+    "share_instrument_days_sign_differs": 0.07420212765957447
+   }
+  ]
+ },
+ "haiku": {
+  "mean": {
+   "ann_total": 0.037272934732877086,
+   "ann_sign_differs": 0.013175435287352887,
+   "ann_same_sign": 0.0240974994455242,
+   "share_instrument_days_sign_differs": 0.0958909574468085,
+   "share_of_total_from_same_sign": 0.6465146793034432,
+   "runs_same_sign_positive": 10,
+   "runs_sign_differs_positive": 10,
+   "n_runs": 10
+  },
+  "runs": [
+   {
+    "run": "frontier_haiku_r2",
+    "ann_total": 0.04370683863648214,
+    "ann_sign_differs": 0.006939681504782131,
+    "ann_same_sign": 0.036767157131700014,
+    "share_instrument_days_sign_differs": 0.10837765957446809
+   },
+   {
+    "run": "frontier_haiku_r3",
+    "ann_total": 0.039591445474600515,
+    "ann_sign_differs": 0.026278432481327378,
+    "ann_same_sign": 0.013313012993273136,
+    "share_instrument_days_sign_differs": 0.09893617021276596
+   },
+   {
+    "run": "frontier_haiku_r4",
+    "ann_total": 0.046519469630002606,
+    "ann_sign_differs": 0.017933753029487895,
+    "ann_same_sign": 0.02858571660051471,
+    "share_instrument_days_sign_differs": 0.09268617021276596
+   },
+   {
+    "run": "frontier_haiku_r5",
+    "ann_total": 0.03572614389279268,
+    "ann_sign_differs": 0.002480946127226332,
+    "ann_same_sign": 0.03324519776556635,
+    "share_instrument_days_sign_differs": 0.09933510638297872
+   },
+   {
+    "run": "frontier_haiku_r6",
+    "ann_total": 0.019764229011813038,
+    "ann_sign_differs": 0.0037262184228935716,
+    "ann_same_sign": 0.016038010588919467,
+    "share_instrument_days_sign_differs": 0.08789893617021277
+   },
+   {
+    "run": "frontier_haiku_r7",
+    "ann_total": 0.03429015212872425,
+    "ann_sign_differs": 0.017983233223149597,
+    "ann_same_sign": 0.016306918905574654,
+    "share_instrument_days_sign_differs": 0.1
+   },
+   {
+    "run": "frontier_haiku_r8",
+    "ann_total": 0.03777677614887558,
+    "ann_sign_differs": 0.015658001598428523,
+    "ann_same_sign": 0.022118774550447053,
+    "share_instrument_days_sign_differs": 0.09228723404255319
+   },
+   {
+    "run": "frontier_haiku_r9",
+    "ann_total": 0.026823587761029326,
+    "ann_sign_differs": 0.007267333218229919,
+    "ann_same_sign": 0.019556254542799405,
+    "share_instrument_days_sign_differs": 0.0976063829787234
+   },
+   {
+    "run": "frontier_haiku_r10",
+    "ann_total": 0.03705447122787323,
+    "ann_sign_differs": 0.010912816462865602,
+    "ann_same_sign": 0.02614165476500763,
+    "share_instrument_days_sign_differs": 0.09587765957446809
+   },
+   {
+    "run": "frontier_haiku_r11",
+    "ann_total": 0.05147623341657749,
+    "ann_sign_differs": 0.02257393680513793,
+    "ann_same_sign": 0.02890229661143956,
+    "share_instrument_days_sign_differs": 0.08590425531914894
+   }
+  ]
+ }
+}

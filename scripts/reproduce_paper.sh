@@ -40,6 +40,7 @@ python -m scripts.analyze_robustness       # block lengths, equivalence classes,
 python -m scripts.validate_bootstrap       # simulation check of the multi-run bootstrap (CPU, ~1 h)
 python -m scripts.analyze_factorial        # communication x adjudication contrasts
 python -m scripts.analyze_placebo_seeds    # six placebo mappings, DatedGPT 2022-2024
+python -m scripts.analyze_judge_decomposition  # debate judge: resizing vs sign changes
 python -m scripts.analyze_decision_flow --window b
 python -m scripts.analyze_decision_flow --window b --protocols debate --tag _debate --groups sonnet haiku
 python -m scripts.analyze_disagreement --window b

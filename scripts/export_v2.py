@@ -124,7 +124,8 @@ def main() -> None:
     if bv:
         N["bv.reps"], N["bv.T"], N["bv.rho"] = str(bv["reps"]), str(bv["T"]), f"{bv['rho']:.2f}"
         N["bv.cov0"], N["bv.rej0"] = pct(bv["delta_0.00"]["coverage_95"], 1), pct(bv["delta_0.00"]["reject_5pct"], 1)
-        N["bv.cov2"], N["bv.pow2"] = pct(bv["delta_0.20"]["coverage_95"], 1), pct(bv["delta_0.20"]["reject_5pct"], 0)
+        N["bv.cov2"], N["bv.pow2"] = pct(bv["delta_0.20"]["coverage_95"], 1), pct(bv["delta_0.20"]["reject_5pct"], 1)
+        N["bv.nboot"] = f"{bv['n_boot']:,}"
         N["bv.est2"] = f"{bv['delta_0.20']['mean_estimate']:.3f}"
         N["bv.width"] = f"{bv['delta_0.00']['mean_ci_width']:.2f}"
 
@@ -140,8 +141,11 @@ def main() -> None:
             N[f"chk.c3.{y}"] = pct(v["share"])
         N["chk.c4"] = pct(ch["C4"]["share"])
         N["chk.c4n"] = str(ch["C4"]["n"])
-        N["chk.npass"] = str(sum([ch["C1"]["pass"], ch["C2"]["pass_a"], ch["C2"]["pass_b"],
+        # pre-registered checks: C1, C2 (passes only if both (a) and (b) pass), C3 (every vintage), C4
+        N["chk.npass"] = str(sum([ch["C1"]["pass"], ch["C2"]["pass_a"] and ch["C2"]["pass_b"],
                                   all(v["pass"] for v in ch["C3"].values()), ch["C4"]["pass"]]))
+        N["chk.n"] = "4"
+        N["chk.c2weeks"] = str(ch["C2"]["n_calls"] // 3)
     for c, lab in (("clean_nameonly", "nameonly"), ("clean", "clean"), ("none", "none")):
         p = RAW_DIR / f"b__{c}__independent_ensemble" / "excess_returns.parquet"
         if p.exists():
@@ -223,6 +227,7 @@ def main() -> None:
                 rh = hi / x["high"]["instrument_days"]
                 rl = lo / x["low"]["instrument_days"]
                 N[k + ".perday"] = num(1e6 * rh, 1) + "/" + num(1e6 * rl, 1)
+                N[k + ".absratio"] = f"{x['high']['mean_abs_daily_contribution_bp'] / x['low']['mean_abs_daily_contribution_bp']:.2f}"
 
     # ---- unused period ------------------------------------------------------------------------
     un = J("unused_c")
@@ -325,6 +330,23 @@ def main() -> None:
         pipe = ps["sequential_pipeline"]["diff"]
         N["seeds.b.pipe"] = num(pipe)
         N["seeds.b.below"] = str(sum(x < pipe for x in pl))
+
+    # ---- debate judge: resizing vs sign changes ---------------------------------------------
+    jd = J("judge_decomposition_b")
+    if jd:
+        for g, v in jd.items():
+            m = v["mean"]
+            N[f"judge.{g}.flipshare"] = pct(m["share_instrument_days_sign_differs"])
+            N[f"judge.{g}.fromflip"] = pct(1 - m["share_of_total_from_same_sign"])
+            N[f"judge.{g}.fromresize"] = pct(m["share_of_total_from_same_sign"])
+            N[f"judge.{g}.allpos"] = "yes" if m["runs_same_sign_positive"] == m["runs_sign_differs_positive"] == m["n_runs"] else "no"
+
+    # ---- responses in the reported runs (manifest) ---------------------------------------------
+    man = Path(__file__).resolve().parent.parent / "docs" / "run_manifest.json"
+    if man.exists():
+        mk = json.loads(man.read_text())["cached_responses_by_model_key"]
+        for fam in ("sonnet", "haiku"):
+            N[f"calls.{fam}"] = f"{sum(n for k, n in mk.items() if k.startswith(f'claude-{fam}') and '|run=' in k):,}"
 
     (out / "numbers_v2.tex").write_text("".join(f"\\pactdef{{{k}}}{{{v}}}\n" for k, v in sorted(N.items())))
     print(f"{len(N)} numbers; files in {out}")
