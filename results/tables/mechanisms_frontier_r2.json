@@ -1,0 +1,252 @@
+{
+  "pairs": {
+    "single_agent": {
+      "rho": 0.8851707337891862,
+      "active_share": 0.4394877362205869,
+      "sign_disagreement": 0.35391766268260294,
+      "diff_ann_mean": 0.032987258212958954,
+      "diff_sharpe": 0.5320211771484433,
+      "mde_3y": 0.7766902947481611
+    },
+    "single_agent_sc": {
+      "rho": 0.8834447553129801,
+      "active_share": 0.43856621521818595,
+      "sign_disagreement": 0.3459495351925631,
+      "diff_ann_mean": 0.03374399259774022,
+      "diff_sharpe": 0.5414034976525572,
+      "mde_3y": 0.782505671290017
+    },
+    "sequential_pipeline": {
+      "rho": 0.9895128081428419,
+      "active_share": 0.08280148171382835,
+      "sign_disagreement": 0.05936254980079681,
+      "diff_ann_mean": -0.009497431605300272,
+      "diff_sharpe": -0.4950541169578088,
+      "mde_3y": 0.23472059112118981
+    },
+    "pipeline_placebo": {
+      "rho": 0.9883025858319825,
+      "active_share": 0.10157548835018794,
+      "sign_disagreement": 0.0648074369189907,
+      "diff_ann_mean": -0.018048076334312203,
+      "diff_sharpe": -0.8908230692645166,
+      "mde_3y": 0.2478942864878824
+    },
+    "hierarchical": {
+      "rho": 0.996236937231554,
+      "active_share": 0.04045587675776062,
+      "sign_disagreement": 0.018193891102257637,
+      "diff_ann_mean": 0.010258709049913847,
+      "diff_sharpe": 0.8907136557087358,
+      "mde_3y": 0.140602264332228
+    },
+    "debate": {
+      "rho": 0.9728487611139303,
+      "active_share": 0.17677282909834724,
+      "sign_disagreement": 0.06958831341301461,
+      "diff_ann_mean": 0.03407909748935988,
+      "diff_sharpe": 1.0990146351305607,
+      "mde_3y": 0.3776734095759998
+    },
+    "llm_plus_anchor": {
+      "rho": 0.9469944598481395,
+      "active_share": 0.23796295987623287,
+      "sign_disagreement": 0.09667994687915006,
+      "diff_ann_mean": 0.026839755153325446,
+      "diff_sharpe": 0.6208729728474389,
+      "mde_3y": 0.5276940725348994
+    }
+  },
+  "power": {
+    "grid": [
+      {
+        "rho": 0.0,
+        "mde_3y": 2.2874845736784035,
+        "mde_10y": 1.2529069009487497,
+        "mde_25y": 0.7924079006282055,
+        "mde_3m": 7.9240790062820565,
+        "years_for_0.25": 251.16411239120004
+      },
+      {
+        "rho": 0.5,
+        "mde_3y": 1.6174958539076176,
+        "mde_10y": 0.885938965856283,
+        "mde_25y": 0.5603170000000001,
+        "mde_3m": 5.60317,
+        "years_for_0.25": 125.58205619560002
+      },
+      {
+        "rho": 0.8,
+        "mde_3y": 1.0229942008454072,
+        "mde_10y": 0.560317,
+        "mde_25y": 0.35437558634251315,
+        "mde_3m": 3.5437558634251314,
+        "years_for_0.25": 50.232822478239996
+      },
+      {
+        "rho": 0.9,
+        "mde_3y": 0.7233661365323004,
+        "mde_10y": 0.39620395031410277,
+        "mde_25y": 0.2505813801897499,
+        "mde_3m": 2.5058138018974994,
+        "years_for_0.25": 25.116411239119998
+      },
+      {
+        "rho": 0.95,
+        "mde_3y": 0.5114971004227038,
+        "mde_10y": 0.28015850000000014,
+        "mde_25y": 0.17718779317125666,
+        "mde_3m": 1.7718779317125666,
+        "years_for_0.25": 12.558205619560013
+      }
+    ]
+  },
+  "agents": {
+    "macro_regime": {
+      "anchor": {
+        "n_calls": 1301,
+        "coverage": 0.8393548387096774,
+        "hit_rate": 0.5034588777863183,
+        "ic": -0.005063015189779522
+      },
+      "llm": {
+        "n_calls": 1143,
+        "coverage": 0.7374193548387097,
+        "hit_rate": 0.5240594925634295,
+        "ic": 0.05305642563244541
+      },
+      "changed_share": 0.2161290322580645,
+      "changed_hit_rate": 0.5934959349593496,
+      "changed_n": 123
+    },
+    "narrative_event": {
+      "anchor": {
+        "n_calls": 326,
+        "coverage": 0.2103225806451613,
+        "hit_rate": 0.4938650306748466,
+        "ic": 0.011509621423770761
+      },
+      "llm": {
+        "n_calls": 833,
+        "coverage": 0.5374193548387097,
+        "hit_rate": 0.48139255702280914,
+        "ic": -0.05359961240190438
+      },
+      "changed_share": 0.44129032258064516,
+      "changed_hit_rate": 0.49683544303797467,
+      "changed_n": 632
+    },
+    "cross_asset_transmission": {
+      "anchor": {
+        "n_calls": 1349,
+        "coverage": 0.8703225806451613,
+        "hit_rate": 0.5033358042994811,
+        "ic": 0.0010255809959715926
+      },
+      "llm": {
+        "n_calls": 1303,
+        "coverage": 0.8406451612903226,
+        "hit_rate": 0.5172678434382195,
+        "ic": 0.03298412690209351
+      },
+      "changed_share": 0.2845161290322581,
+      "changed_hit_rate": 0.5539568345323741,
+      "changed_n": 278
+    },
+    "technical_trend": {
+      "anchor": {
+        "n_calls": 1513,
+        "coverage": 0.9761290322580645,
+        "hit_rate": 0.5109054857898215,
+        "ic": 0.021148320504505366
+      },
+      "llm": {
+        "n_calls": 1513,
+        "coverage": 0.9761290322580645,
+        "hit_rate": 0.5109054857898215,
+        "ic": 0.021148320504505366
+      },
+      "changed_share": 0.0,
+      "changed_hit_rate": NaN,
+      "changed_n": 0
+    },
+    "fundamentals_carry": {
+      "anchor": {
+        "n_calls": 347,
+        "coverage": 0.2238709677419355,
+        "hit_rate": 0.4697406340057637,
+        "ic": -0.03267627235774945
+      },
+      "llm": {
+        "n_calls": 330,
+        "coverage": 0.2129032258064516,
+        "hit_rate": 0.5151515151515151,
+        "ic": -0.007808210059004596
+      },
+      "changed_share": 0.16193548387096773,
+      "changed_hit_rate": 0.5254237288135594,
+      "changed_n": 118
+    }
+  },
+  "compute": {
+    "independent_ensemble": {
+      "calls": 2041,
+      "input_tokens": 923443,
+      "output_tokens": 690105,
+      "cost_usd": 8.747936000000001,
+      "latency_hours": 1.9030113888888889
+    },
+    "single_agent": {
+      "calls": 157,
+      "input_tokens": 1223642,
+      "output_tokens": 195699,
+      "cost_usd": 4.404274,
+      "latency_hours": 0.39271027777777784
+    },
+    "single_agent_sc": {
+      "calls": 785,
+      "input_tokens": 6118210,
+      "output_tokens": 978791,
+      "cost_usd": 22.02433,
+      "latency_hours": 1.9721636111111118
+    },
+    "sequential_pipeline": {
+      "calls": 2198,
+      "input_tokens": 1097969,
+      "output_tokens": 852952,
+      "cost_usd": 10.725458000000001,
+      "latency_hours": 2.2408874999999986
+    },
+    "pipeline_placebo": {
+      "calls": 2198,
+      "input_tokens": 1097969,
+      "output_tokens": 852615,
+      "cost_usd": 10.722088000000001,
+      "latency_hours": 2.2461216666666663
+    },
+    "hierarchical": {
+      "calls": 2041,
+      "input_tokens": 923443,
+      "output_tokens": 690105,
+      "cost_usd": 8.747936000000001,
+      "latency_hours": 1.9030113888888889
+    },
+    "debate": {
+      "calls": 3608,
+      "input_tokens": 2002205,
+      "output_tokens": 1175848,
+      "cost_usd": 15.76289,
+      "latency_hours": 3.3854425000000066
+    },
+    "debate_multiround": {
+      "error": "2582 calls missing from cache"
+    },
+    "llm_plus_anchor": {
+      "calls": 3611,
+      "input_tokens": 2680467,
+      "output_tokens": 1060507,
+      "cost_usd": 15.966004000000002,
+      "latency_hours": 3.131911666666667
+    }
+  }
+}

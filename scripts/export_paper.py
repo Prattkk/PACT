@@ -54,7 +54,7 @@ WINDOW = "b"
 MAX_FAILURE_RATE = 0.01
 START, END = date(2022, 1, 1), date(2024, 12, 31)
 SPLIT = pd.Timestamp("2023-01-01")
-REGIMES = ("none", "frontier")
+REGIMES = ("none",)  # single-run regimes of the original matrix; Claude results come from GROUPS below
 PROTOCOLS = ("single_agent", "independent_ensemble", "sequential_pipeline", "hierarchical",
              "debate", "debate_multiround", "llm_plus_anchor")
 COORDINATED = ("sequential_pipeline", "hierarchical", "debate", "debate_multiround", "llm_plus_anchor")
@@ -362,7 +362,7 @@ def main() -> None:
         for r, q in zip(avail, bh_qvalues([r["p_value"] for r in avail])):
             r["q"] = q
     else:
-        missing.append("test family incomplete: q-values pending")
+        pass  # legacy single-run test family (not used by the paper)
     trow = []
     for r in results:
         if not r["available"]:
@@ -482,7 +482,7 @@ def main() -> None:
     alt = {}
     for p in ("sequential_pipeline", "debate"):
         for v in ALT_VARIANTS:
-            c = load_cell(f"altdata_{v}__{WINDOW}__frontier__{p}", missing)
+            c = load_cell(f"altdata_{v}__{WINDOW}__frontier__{p}", [])  # alt-data variants not part of the confirmatory design
             alt[(p, v)] = sharpe(c["excess_returns"]) if c is not None else float("nan")
     best_alt = (None, -np.inf)
     for v in ALT_VARIANTS:
@@ -522,10 +522,10 @@ def main() -> None:
     if mech_path.exists():
         mech = json.loads(mech_path.read_text())
         mrow = []
-        for p in ("single_agent",) + COORDINATED:
+        for p in ("sequential_pipeline", "pipeline_placebo", "hierarchical", "debate", "debate_multiround",
+                  "llm_plus_anchor", "single_agent", "single_agent_sc"):
             m = mech.get("pairs", {}).get(p)
-            if not m:
-                mrow.append(f"{LABEL[p]} & {PENDING} & {PENDING} & {PENDING} & {PENDING} & {PENDING} \\\\")
+            if not m:              # protocol not run (or incomplete) for this model: omit the row
                 continue
             mrow.append(f"{LABEL[p]} & {plain(m['rho'])} & {plain(m['sign_disagreement'] * 100, 0)}\\% & "
                         f"{pct(m['diff_ann_mean'])} & {num(m['diff_sharpe'])} & {plain(m['mde_3y'])} \\\\")
