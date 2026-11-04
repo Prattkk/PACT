@@ -1,0 +1,322 @@
+[
+ {
+  "asset": "SPY",
+  "desc": "US large-cap stock index ETF",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "QQQ",
+  "desc": "US technology-heavy stock index ETF",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "IWM",
+  "desc": "US small-cap stock index ETF",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "EEM",
+  "desc": "emerging-markets stock ETF",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "IEF",
+  "desc": "7-10 year US Treasury bond ETF",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "SHY",
+  "desc": "1-3 year US Treasury bond ETF",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "GLD",
+  "desc": "gold ETF",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "USO",
+  "desc": "crude oil ETF",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "UUP",
+  "desc": "US dollar index ETF",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "BTC",
+  "desc": "bitcoin",
+  "label": "Price trend",
+  "bullish": "price is 15% above its 200-day average and has risen in each of the last 6 months",
+  "bearish": "price is 15% below its 200-day average and has fallen in each of the last 6 months",
+  "horizon": "month"
+ },
+ {
+  "asset": "SPY",
+  "desc": "US large-cap stock index ETF",
+  "label": "Macroeconomic data",
+  "bullish": "GDP growth accelerating to 4%, inflation falling to 2%, unemployment falling",
+  "bearish": "GDP contracting by 2%, inflation rising to 8%, unemployment rising sharply",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "QQQ",
+  "desc": "US technology-heavy stock index ETF",
+  "label": "Macroeconomic data",
+  "bullish": "interest rates falling and corporate earnings growing 20% a year",
+  "bearish": "interest rates rising sharply and corporate earnings falling 20% a year",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "IWM",
+  "desc": "US small-cap stock index ETF",
+  "label": "Macroeconomic data",
+  "bullish": "domestic economy expanding strongly and credit spreads narrowing",
+  "bearish": "recession starting and credit spreads widening sharply",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "EEM",
+  "desc": "emerging-markets stock ETF",
+  "label": "Macroeconomic data",
+  "bullish": "US dollar weakening and global trade growing quickly",
+  "bearish": "US dollar strengthening sharply and global trade collapsing",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "IEF",
+  "desc": "7-10 year US Treasury bond ETF",
+  "label": "Macroeconomic data",
+  "bullish": "inflation falling fast and the central bank cutting interest rates",
+  "bearish": "inflation rising to 9% and the central bank raising interest rates aggressively",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "SHY",
+  "desc": "1-3 year US Treasury bond ETF",
+  "label": "Macroeconomic data",
+  "bullish": "the central bank has just started a cycle of interest-rate cuts",
+  "bearish": "the central bank has just started a cycle of interest-rate hikes",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "GLD",
+  "desc": "gold ETF",
+  "label": "Macroeconomic data",
+  "bullish": "real interest rates falling below zero and inflation rising",
+  "bearish": "real interest rates rising to 3% and inflation falling",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "USO",
+  "desc": "crude oil ETF",
+  "label": "Macroeconomic data",
+  "bullish": "global demand rising and oil inventories falling to a 10-year low",
+  "bearish": "global demand falling and oil inventories rising to a 10-year high",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "UUP",
+  "desc": "US dollar index ETF",
+  "label": "Macroeconomic data",
+  "bullish": "US interest rates rising faster than in other countries",
+  "bearish": "US interest rates falling faster than in other countries",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "BTC",
+  "desc": "bitcoin",
+  "label": "Macroeconomic data",
+  "bullish": "liquidity expanding and risk appetite rising across markets",
+  "bearish": "liquidity contracting and risk appetite collapsing across markets",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "SPY",
+  "desc": "US large-cap stock index ETF",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "QQQ",
+  "desc": "US technology-heavy stock index ETF",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "IWM",
+  "desc": "US small-cap stock index ETF",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "EEM",
+  "desc": "emerging-markets stock ETF",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "IEF",
+  "desc": "7-10 year US Treasury bond ETF",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "SHY",
+  "desc": "1-3 year US Treasury bond ETF",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "GLD",
+  "desc": "gold ETF",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "USO",
+  "desc": "crude oil ETF",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "UUP",
+  "desc": "US dollar index ETF",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "BTC",
+  "desc": "bitcoin",
+  "label": "News coverage and tone indicators",
+  "bullish": "news coverage surged with strongly positive tone (tone z-score +3)",
+  "bearish": "news coverage surged with strongly negative tone (tone z-score -3)",
+  "horizon": "week"
+ },
+ {
+  "asset": "SPY",
+  "desc": "US large-cap stock index ETF",
+  "label": "Fundamental and carry indicators",
+  "bullish": "earnings yield far above bond yields and earnings revisions strongly positive",
+  "bearish": "earnings yield far below bond yields and earnings revisions strongly negative",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "QQQ",
+  "desc": "US technology-heavy stock index ETF",
+  "label": "Fundamental and carry indicators",
+  "bullish": "valuations at a 10-year low and profit margins expanding",
+  "bearish": "valuations at a record high and profit margins shrinking",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "IWM",
+  "desc": "US small-cap stock index ETF",
+  "label": "Fundamental and carry indicators",
+  "bullish": "small-company earnings beating forecasts and borrowing costs falling",
+  "bearish": "small-company earnings missing forecasts and borrowing costs rising",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "EEM",
+  "desc": "emerging-markets stock ETF",
+  "label": "Fundamental and carry indicators",
+  "bullish": "emerging-market currencies strengthening and exports growing",
+  "bearish": "emerging-market currencies collapsing and exports shrinking",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "IEF",
+  "desc": "7-10 year US Treasury bond ETF",
+  "label": "Fundamental and carry indicators",
+  "bullish": "yield curve steep and term premium high",
+  "bearish": "yield curve inverted and term premium negative",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "SHY",
+  "desc": "1-3 year US Treasury bond ETF",
+  "label": "Fundamental and carry indicators",
+  "bullish": "short-term yields expected to fall as policy rates are cut",
+  "bearish": "short-term yields expected to rise as policy rates are raised",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "GLD",
+  "desc": "gold ETF",
+  "label": "Fundamental and carry indicators",
+  "bullish": "central-bank gold purchases at a record high",
+  "bearish": "central banks selling gold reserves at a record pace",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "USO",
+  "desc": "crude oil ETF",
+  "label": "Fundamental and carry indicators",
+  "bullish": "crude inventories drew down 10 million barrels and supply was cut",
+  "bearish": "crude inventories built up 10 million barrels and supply was increased",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "UUP",
+  "desc": "US dollar index ETF",
+  "label": "Fundamental and carry indicators",
+  "bullish": "US trade deficit narrowing and capital flowing into the US",
+  "bearish": "US trade deficit widening and capital flowing out of the US",
+  "horizon": "quarter"
+ },
+ {
+  "asset": "BTC",
+  "desc": "bitcoin",
+  "label": "Fundamental and carry indicators",
+  "bullish": "on-chain transactions up 50% and active addresses at a record high",
+  "bearish": "on-chain transactions down 50% and active addresses at a multi-year low",
+  "horizon": "quarter"
+ }
+]
