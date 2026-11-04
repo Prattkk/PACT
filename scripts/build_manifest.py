@@ -33,6 +33,17 @@ def sha(path: str) -> str:
     return h.hexdigest()
 
 
+def values_sha(path) -> str:
+    """Hash of the dates and values rounded to 1e-10: independent of the pandas/pyarrow version that
+    wrote the file (parquet metadata differs across versions) and of last-bit floating-point noise."""
+    import numpy as np
+    import pandas as pd
+    s = pd.read_parquet(path)
+    h = hashlib.sha256("|".join(pd.DatetimeIndex(s.index).strftime("%Y-%m-%d")).encode())
+    h.update(np.round(s.to_numpy(dtype=float), 10).tobytes())
+    return h.hexdigest()
+
+
 def main() -> None:
     import argparse
     ap = argparse.ArgumentParser()
@@ -47,7 +58,8 @@ def main() -> None:
                            "git_commit": meta.get("git_commit"),
                            "failed_calls": sum(v for k, v in meta.get("llm_stats", {}).items() if k.endswith(":call_failed")),
                            "unparseable": sum(v for k, v in meta.get("llm_stats", {}).items() if k.endswith(":unparseable")),
-                           "excess_returns_sha256": sha(str(RAW_DIR / d / "excess_returns.parquet"))})
+                           "excess_returns_sha256": sha(str(RAW_DIR / d / "excess_returns.parquet")),
+                           "excess_returns_values_sha256": values_sha(RAW_DIR / d / "excess_returns.parquet")})
     models, prompts = Counter(), defaultdict(set)
     for f in glob.glob(str(REPO_ROOT / "data/cache/llm/*/*.json")):
         d = json.load(open(f))

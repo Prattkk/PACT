@@ -136,7 +136,8 @@ analyses; `SKIP_SLOW=1` skips the 1-hour bootstrap simulation and keeps its arch
 
 The script rebuilds the run manifest into `results/run_manifest_rebuilt.json` and
 `scripts/verify_reproduction.py` compares it with `docs/run_manifest.json`: every cell's
-excess-return SHA-256, failed-call and unparseable-reply counts, the released response counts and
+excess-return values (SHA-256 of dates and values rounded to 1e-10, so a different pandas or
+pyarrow version that writes different parquet bytes still passes), failed-call and unparseable-reply counts, the released response counts and
 the input hashes. It exits non-zero on any difference (the cell runner itself exits 0 when a cell
 fails, so this is the check to rely on). An independent rerun from a fresh clone reproduced all
 119 cells exactly and every regenerated number the paper uses.
