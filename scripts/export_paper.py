@@ -680,7 +680,8 @@ def main() -> None:
                 dcols.append("--")
             else:
                 star = "$^{*}$" if sec_q.get((p, g), 1.0) < 0.05 else ""
-                dcols.append(f"\\makecell{{{num(r['diff'])}{star}\\\\ {{\\tiny{interval(r['ci_lo'], r['ci_hi'])}}}}}")
+                runs = f" {{\\tiny({int(round(r['share_positive'] * r['n_runs']))}/{r['n_runs']})}}" if r["n_runs"] > 1 else ""
+                dcols.append(f"\\makecell{{{num(r['diff'])}{star}{runs}\\\\ {{\\tiny{interval(r['ci_lo'], r['ci_hi'])}}}}}")
         lrow2.append(f"{LABEL[p]} & " + " & ".join(cols + dcols) + r" \\")
     (out / "tab_levels.tex").write_text("\n".join(lrow2) + "\n")
 
