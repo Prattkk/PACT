@@ -1,0 +1,50 @@
+{
+ "median": 0.6666666666666667,
+ "share_high_instrument_weeks": 0.20543130990415334,
+ "groups": {
+  "clean": {
+   "sequential_pipeline": {
+    "high": {
+     "instrument_days": 3110.0,
+     "mean_abs_weight_diff": 0.040079168547843144,
+     "ann_contribution": 0.001646823236184398,
+     "mean_abs_daily_contribution_bp": 2.439003797331618
+    },
+    "low": {
+     "instrument_days": 11950.0,
+     "mean_abs_weight_diff": 0.0493202802367233,
+     "ann_contribution": -0.03546273450014966,
+     "mean_abs_daily_contribution_bp": 3.204157804680616
+    }
+   },
+   "pipeline_placebo": {
+    "high": {
+     "instrument_days": 3110.0,
+     "mean_abs_weight_diff": 0.043693305082283494,
+     "ann_contribution": -0.0006927193022176665,
+     "mean_abs_daily_contribution_bp": 2.7638582097993956
+    },
+    "low": {
+     "instrument_days": 11950.0,
+     "mean_abs_weight_diff": 0.04830299266527226,
+     "ann_contribution": 0.011494883534560279,
+     "mean_abs_daily_contribution_bp": 3.701246924082616
+    }
+   },
+   "hierarchical": {
+    "high": {
+     "instrument_days": 3110.0,
+     "mean_abs_weight_diff": 0.009249845656211605,
+     "ann_contribution": -0.0014212885562677742,
+     "mean_abs_daily_contribution_bp": 0.7969677881473725
+    },
+    "low": {
+     "instrument_days": 11950.0,
+     "mean_abs_weight_diff": 0.009656181171262374,
+     "ann_contribution": -0.001557738273355083,
+     "mean_abs_daily_contribution_bp": 0.7635045581529236
+    }
+   }
+  }
+ }
+}

@@ -227,17 +227,17 @@ def main() -> None:
     # ---- unused period ------------------------------------------------------------------------
     un = J("unused_c")
     if un:
-        comps = [("sequential_pipeline:independent_ensemble", "Pipeline vs ensemble"),
-                 ("pipeline_placebo:independent_ensemble", "Placebo vs ensemble"),
-                 ("sequential_pipeline:pipeline_placebo", "Pipeline vs placebo"),
-                 ("hierarchical:independent_ensemble", "Conviction gate vs ensemble"),
-                 ("pipeline_placebo_s1:independent_ensemble", "Random placebo 1 vs ens."),
-                 ("pipeline_placebo_s2:independent_ensemble", "Random placebo 2 vs ens.")]
+        comps = [("sequential_pipeline:independent_ensemble", "Pipeline $-$ ens."),
+                 ("pipeline_placebo:independent_ensemble", "Placebo $-$ ens."),
+                 ("sequential_pipeline:pipeline_placebo", "Pipeline $-$ placebo"),
+                 ("hierarchical:independent_ensemble", "Conv.\\ gate $-$ ens."),
+                 ("pipeline_placebo_s1:independent_ensemble", "Rand.\\ placebo 1 $-$ ens."),
+                 ("pipeline_placebo_s2:independent_ensemble", "Rand.\\ placebo 2 $-$ ens.")]
         pers = ("2016-2021", "2016-2018", "2019-2021")
         years = [str(y) for y in range(2016, 2022)]
         regs = [r for r in ("none", "clean") if r in un["regimes"]]
         L = []
-        lev = ["Ensemble Sharpe ratio"]
+        lev = ["Ensemble SR"]
         for r in regs:
             for per in pers:
                 lev.append(num(un["regimes"][r]["sharpe"][per].get("independent_ensemble")))
@@ -247,7 +247,12 @@ def main() -> None:
             for r in regs:
                 for per in pers:
                     x = un["regimes"][r]["comparisons"][per].get(c)
-                    row.append(cell(x["diff"], x["ci_lo"], x["ci_hi"], x["class"]) if x else "--")
+                    if not x:
+                        row.append("--")
+                    elif per == "2016-2021":
+                        row.append(cell(x["diff"], x["ci_lo"], x["ci_hi"], x["class"]))
+                    else:
+                        row.append(num(x["diff"]) + r"$^{\mathrm{" + CLS[x["class"]] + "}}$")
             npos = []
             for r in regs:
                 ys = [un["regimes"][r]["comparisons"][y].get(c) for y in years]

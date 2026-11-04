@@ -1,0 +1,1394 @@
+{
+ "meaningful": 0.2,
+ "regimes": {
+  "none": {
+   "sharpe": {
+    "2016-2021": {
+     "independent_ensemble": -0.13194666447225267,
+     "sequential_pipeline": -0.3787591150415437,
+     "pipeline_placebo": -0.32518362323933325,
+     "hierarchical": -0.11502178709869477,
+     "pipeline_placebo_s1": -0.3907626857072803,
+     "pipeline_placebo_s2": -0.33061481437060175,
+     "deterministic_only": 0.5412764132315251
+    },
+    "2016-2018": {
+     "independent_ensemble": 0.5399998836948666,
+     "sequential_pipeline": 0.2669875147200731,
+     "pipeline_placebo": 0.3400187598098121,
+     "hierarchical": 0.5796539388572337,
+     "pipeline_placebo_s1": 0.24196373674293084,
+     "pipeline_placebo_s2": 0.2839944664724867,
+     "deterministic_only": 0.8519894899986297
+    },
+    "2019-2021": {
+     "independent_ensemble": -0.8929466065180292,
+     "sequential_pipeline": -1.1404681283930935,
+     "pipeline_placebo": -1.1083779984054225,
+     "hierarchical": -0.8990033420429219,
+     "pipeline_placebo_s1": -1.1282045596182149,
+     "pipeline_placebo_s2": -1.029725479410647,
+     "deterministic_only": 0.17756883959756184
+    },
+    "2016": {
+     "independent_ensemble": -1.276964275160299,
+     "sequential_pipeline": -1.5130705205141117,
+     "pipeline_placebo": -1.5767949957573002,
+     "hierarchical": -1.3431789989603558,
+     "pipeline_placebo_s1": -1.2563483717456279,
+     "pipeline_placebo_s2": -1.9800463067148322,
+     "deterministic_only": 0.0015202711430336007
+    },
+    "2017": {
+     "independent_ensemble": 2.9347839988347784,
+     "sequential_pipeline": 2.554734846012212,
+     "pipeline_placebo": 2.8921920601518356,
+     "hierarchical": 2.9223495883007096,
+     "pipeline_placebo_s1": 2.5351588766183184,
+     "pipeline_placebo_s2": 2.935523975081961,
+     "deterministic_only": 2.3452463393251453
+    },
+    "2018": {
+     "independent_ensemble": -0.0818186519129305,
+     "sequential_pipeline": -0.29981237413362766,
+     "pipeline_placebo": -0.3017001912935585,
+     "hierarchical": 0.06415978107163871,
+     "pipeline_placebo_s1": -0.4695575476811518,
+     "pipeline_placebo_s2": -0.22166020536528352,
+     "deterministic_only": 0.4949808437981003
+    },
+    "2019": {
+     "independent_ensemble": -2.080983793749553,
+     "sequential_pipeline": -2.250115631113803,
+     "pipeline_placebo": -2.284780973001581,
+     "hierarchical": -2.083033347360614,
+     "pipeline_placebo_s1": -2.427683732368627,
+     "pipeline_placebo_s2": -2.476488708394208,
+     "deterministic_only": -1.371649364526926
+    },
+    "2020": {
+     "independent_ensemble": -0.8101477252102113,
+     "sequential_pipeline": -1.384254742705849,
+     "pipeline_placebo": -1.23018476513034,
+     "hierarchical": -0.8220529514751295,
+     "pipeline_placebo_s1": -1.0863096814252258,
+     "pipeline_placebo_s2": -0.8921580815385964,
+     "deterministic_only": 0.9786672346186571
+    },
+    "2021": {
+     "independent_ensemble": 0.31895770205171875,
+     "sequential_pipeline": 0.36914016251075105,
+     "pipeline_placebo": 0.37003331226101205,
+     "hierarchical": 0.3291729266490918,
+     "pipeline_placebo_s1": 0.2987331979598993,
+     "pipeline_placebo_s2": 0.3486943269417838,
+     "deterministic_only": 0.6204664866524555
+    }
+   },
+   "comparisons": {
+    "2016-2021": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.24681245056929102,
+      "ci_lo": -0.45418673421516004,
+      "ci_hi": -0.05186581519982506,
+      "p_value": 0.018,
+      "ci90": [
+       -0.41523264485451356,
+       -0.07777667569705524
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.19323695876708058,
+      "ci_lo": -0.35342834024447023,
+      "ci_hi": -0.028186278899943025,
+      "p_value": 0.0185,
+      "ci90": [
+       -0.33276715263720164,
+       -0.05168096027277134
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.05357549180221044,
+      "ci_lo": -0.18294236257240604,
+      "ci_hi": 0.07851707154361869,
+      "p_value": 0.4165,
+      "ci90": [
+       -0.16220528169967555,
+       0.0560685864416104
+      ],
+      "class": "practically equivalent"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": 0.016924877373557898,
+      "ci_lo": -0.026368924485983044,
+      "ci_hi": 0.06498638700365168,
+      "p_value": 0.4555,
+      "ci90": [
+       -0.019936421210328972,
+       0.056956514809988146
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.2588160212350276,
+      "ci_lo": -0.4698224064496085,
+      "ci_hi": -0.05390201432756627,
+      "p_value": 0.016,
+      "ci90": [
+       -0.43908411666258723,
+       -0.0909602709401591
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": -0.19866814989834908,
+      "ci_lo": -0.37987859390954926,
+      "ci_hi": -0.037780359204062995,
+      "p_value": 0.02,
+      "ci90": [
+       -0.3541224349101362,
+       -0.0608190755349697
+      ],
+      "class": "meaningful gain excluded"
+     }
+    },
+    "2016-2018": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.27301236897479353,
+      "ci_lo": -0.5210923997760538,
+      "ci_hi": -0.07032118578058945,
+      "p_value": 0.0215,
+      "ci90": [
+       -0.47914559721980926,
+       -0.09365758471969865
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.1999811238850545,
+      "ci_lo": -0.39580918485360844,
+      "ci_hi": -0.02314753733580042,
+      "p_value": 0.0345,
+      "ci90": [
+       -0.36372388152793617,
+       -0.04889628928707882
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.07303124508973902,
+      "ci_lo": -0.2468502440378491,
+      "ci_hi": 0.08311786995761769,
+      "p_value": 0.371,
+      "ci90": [
+       -0.21556336473023252,
+       0.059472520639255386
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": 0.039654055162367086,
+      "ci_lo": -0.04334708678197607,
+      "ci_hi": 0.1320482507962505,
+      "p_value": 0.364,
+      "ci90": [
+       -0.02924452724562027,
+       0.11622185735969319
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.2980361469519358,
+      "ci_lo": -0.5930025944329815,
+      "ci_hi": -0.05146831722628917,
+      "p_value": 0.0325,
+      "ci90": [
+       -0.5360892114785996,
+       -0.0890238917101171
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": -0.2560054172223799,
+      "ci_lo": -0.5444181944785048,
+      "ci_hi": -0.04192391247100246,
+      "p_value": 0.0495,
+      "ci90": [
+       -0.4900043790813969,
+       -0.06957664954767621
+      ],
+      "class": "meaningful gain excluded"
+     }
+    },
+    "2019-2021": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.24752152187506438,
+      "ci_lo": -0.5547459803464246,
+      "ci_hi": 0.060163923680860605,
+      "p_value": 0.1225,
+      "ci90": [
+       -0.5047281872895819,
+       0.019899132624995586
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.21543139188739335,
+      "ci_lo": -0.48704730839681676,
+      "ci_hi": 0.065473207098363,
+      "p_value": 0.126,
+      "ci90": [
+       -0.44086997153981394,
+       0.020922208089743117
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.03209012998767102,
+      "ci_lo": -0.2093033527089509,
+      "ci_hi": 0.15455907973614527,
+      "p_value": 0.729,
+      "ci90": [
+       -0.17942961905116026,
+       0.12526361634806352
+      ],
+      "class": "practically equivalent"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.00605673552489272,
+      "ci_lo": -0.030240998684690663,
+      "ci_hi": 0.021564664269765783,
+      "p_value": 0.6375,
+      "ci90": [
+       -0.026421910199617333,
+       0.016413385816003576
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.2352579531001857,
+      "ci_lo": -0.5484017693349482,
+      "ci_hi": 0.06672668384581587,
+      "p_value": 0.1405,
+      "ci90": [
+       -0.4978110949025189,
+       0.021506504797410914
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": -0.1367788728926178,
+      "ci_lo": -0.40612860252526156,
+      "ci_hi": 0.09959359155265995,
+      "p_value": 0.284,
+      "ci90": [
+       -0.35715046002845374,
+       0.06592098240559335
+      ],
+      "class": "meaningful gain excluded"
+     }
+    },
+    "2016": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.23610624535381275,
+      "ci_lo": -0.7736528079012671,
+      "ci_hi": 0.16714381094512684,
+      "p_value": 0.2905,
+      "ci90": [
+       -0.6493317946317406,
+       0.09949960415956115
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.2998307205970012,
+      "ci_lo": -0.7504041627406958,
+      "ci_hi": 0.05811983415334667,
+      "p_value": 0.142,
+      "ci90": [
+       -0.6767371258021115,
+       0.0016353590119620716
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": 0.06372447524318847,
+      "ci_lo": -0.24956046763863737,
+      "ci_hi": 0.4072251675326861,
+      "p_value": 0.6915,
+      "ci90": [
+       -0.20530053710815943,
+       0.33846614669989933
+      ],
+      "class": "inconclusive"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.06621472380005677,
+      "ci_lo": -0.24445014266912282,
+      "ci_hi": 0.06688447373813461,
+      "p_value": 0.398,
+      "ci90": [
+       -0.20454205036915046,
+       0.049309662690307884
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": 0.020615903414671122,
+      "ci_lo": -0.5600547466029299,
+      "ci_hi": 0.47843929493722975,
+      "p_value": 0.9415,
+      "ci90": [
+       -0.43744559399749394,
+       0.4034149601612415
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": -0.7030820315545332,
+      "ci_lo": -1.6845083007645292,
+      "ci_hi": -0.10898147544921209,
+      "p_value": 0.067,
+      "ci90": [
+       -1.4570986716431693,
+       -0.17312545687217798
+      ],
+      "class": "meaningful gain excluded"
+     }
+    },
+    "2017": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.38004915282256624,
+      "ci_lo": -0.8374954492541955,
+      "ci_hi": -0.03391457978797957,
+      "p_value": 0.0615,
+      "ci90": [
+       -0.7559630073283384,
+       -0.08982133195247413
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.042591938682942754,
+      "ci_lo": -0.39906137295602734,
+      "ci_hi": 0.2714782052629619,
+      "p_value": 0.7995,
+      "ci90": [
+       -0.33110344685132587,
+       0.22473444551899743
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.3374572141396235,
+      "ci_lo": -0.6374283707673889,
+      "ci_hi": -0.08603514375512042,
+      "p_value": 0.018,
+      "ci90": [
+       -0.5919947387785627,
+       -0.1219519584032385
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.012434410534068796,
+      "ci_lo": -0.1328210837152734,
+      "ci_hi": 0.10314932692806886,
+      "p_value": 0.8355,
+      "ci90": [
+       -0.11162651060625114,
+       0.08722793012115101
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.39962512221645996,
+      "ci_lo": -0.9870953874067402,
+      "ci_hi": 0.015349255336379963,
+      "p_value": 0.1185,
+      "ci90": [
+       -0.8895000604496425,
+       -0.03138638000635208
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": 0.0007399762471824722,
+      "ci_lo": -0.31564702132116057,
+      "ci_hi": 0.24082679395279408,
+      "p_value": 0.9925,
+      "ci90": [
+       -0.2631199907525916,
+       0.19868878166255094
+      ],
+      "class": "inconclusive"
+     }
+    },
+    "2018": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.21799372222069716,
+      "ci_lo": -0.6895533739628557,
+      "ci_hi": 0.1217899387944162,
+      "p_value": 0.268,
+      "ci90": [
+       -0.5889328741896117,
+       0.07357164442476705
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.21988153938062802,
+      "ci_lo": -0.57436381674411,
+      "ci_hi": 0.05874168448859189,
+      "p_value": 0.1495,
+      "ci90": [
+       -0.49300568190476607,
+       0.007807113960835729
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": 0.0018878171599308602,
+      "ci_lo": -0.24903819442998812,
+      "ci_hi": 0.2696455889880755,
+      "p_value": 0.9885,
+      "ci90": [
+       -0.20012256700281206,
+       0.21566363257961504
+      ],
+      "class": "inconclusive"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": 0.1459784329845692,
+      "ci_lo": 0.014252663023027308,
+      "ci_hi": 0.37131586420023893,
+      "p_value": 0.0955,
+      "ci90": [
+       0.029867744331257783,
+       0.32131506972752116
+      ],
+      "class": "improvement"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.3877388957682213,
+      "ci_lo": -0.9669591371177891,
+      "ci_hi": -0.0056257215724370025,
+      "p_value": 0.1,
+      "ci90": [
+       -0.8625726439773208,
+       -0.06065854350255475
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": -0.13984155345235302,
+      "ci_lo": -0.39969176428666325,
+      "ci_hi": 0.07592471005606521,
+      "p_value": 0.2255,
+      "ci90": [
+       -0.3469761346981274,
+       0.040364528096839256
+      ],
+      "class": "meaningful gain excluded"
+     }
+    },
+    "2019": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.16913183736425008,
+      "ci_lo": -0.5957897714624563,
+      "ci_hi": 0.2532258746910499,
+      "p_value": 0.427,
+      "ci90": [
+       -0.5151508152850679,
+       0.18159378921636332
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.20379717925202812,
+      "ci_lo": -0.6235718386712048,
+      "ci_hi": 0.17714546740281886,
+      "p_value": 0.325,
+      "ci90": [
+       -0.5626325619064682,
+       0.13139717485654825
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": 0.034665341887778034,
+      "ci_lo": -0.3719110951403944,
+      "ci_hi": 0.3516061341932222,
+      "p_value": 0.854,
+      "ci90": [
+       -0.30994593539740645,
+       0.3073786670752815
+      ],
+      "class": "inconclusive"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.0020495536110609613,
+      "ci_lo": -0.05667315461451914,
+      "ci_hi": 0.04448063362662707,
+      "p_value": 0.9315,
+      "ci90": [
+       -0.047479279344168825,
+       0.03747991724469637
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.3466999386190741,
+      "ci_lo": -0.9737405666613299,
+      "ci_hi": 0.31313984509219045,
+      "p_value": 0.2825,
+      "ci90": [
+       -0.8627743223123824,
+       0.2121516835673022
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": -0.395504914644655,
+      "ci_lo": -0.9428176355364455,
+      "ci_hi": 0.10468675367873954,
+      "p_value": 0.148,
+      "ci90": [
+       -0.8417356374420718,
+       0.04468582599516158
+      ],
+      "class": "meaningful gain excluded"
+     }
+    },
+    "2020": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.5741070174956376,
+      "ci_lo": -1.0914726930650063,
+      "ci_hi": 0.16085949860124274,
+      "p_value": 0.0695,
+      "ci90": [
+       -1.0175476050814276,
+       0.024100718289783007
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.42003703992012864,
+      "ci_lo": -0.9077063816903959,
+      "ci_hi": 0.21721158073379176,
+      "p_value": 0.1345,
+      "ci90": [
+       -0.8273745605404913,
+       0.10808828192102249
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.154069977575509,
+      "ci_lo": -0.46042740339066224,
+      "ci_hi": 0.21255175442424873,
+      "p_value": 0.3575,
+      "ci90": [
+       -0.4057650935214009,
+       0.1528371605043719
+      ],
+      "class": "inconclusive"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.01190522626491819,
+      "ci_lo": -0.03904158389157889,
+      "ci_hi": 0.011679840325673917,
+      "p_value": 0.328,
+      "ci90": [
+       -0.035087065899274614,
+       0.006685573342192408
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.2761619562150145,
+      "ci_lo": -0.7325437561392452,
+      "ci_hi": 0.19557814048555935,
+      "p_value": 0.2925,
+      "ci90": [
+       -0.6653843043177986,
+       0.1422241034055908
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": -0.08201035632838516,
+      "ci_lo": -0.4222512603197351,
+      "ci_hi": 0.19768289037120632,
+      "p_value": 0.5665,
+      "ci90": [
+       -0.36424084812581564,
+       0.14351899787926162
+      ],
+      "class": "meaningful gain excluded"
+     }
+    },
+    "2021": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": 0.050182460459032296,
+      "ci_lo": -0.2896687421780449,
+      "ci_hi": 0.3391121246113076,
+      "p_value": 0.7385,
+      "ci90": [
+       -0.24153930263571025,
+       0.29793649994588733
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": 0.0510756102092933,
+      "ci_lo": -0.42555619548406315,
+      "ci_hi": 0.443549859632111,
+      "p_value": 0.801,
+      "ci90": [
+       -0.33371494044755895,
+       0.37401533890236605
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.000893149750261002,
+      "ci_lo": -0.16307564106257297,
+      "ci_hi": 0.17616469422086217,
+      "p_value": 0.9915,
+      "ci90": [
+       -0.13757156652296545,
+       0.13846744641427816
+      ],
+      "class": "practically equivalent"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": 0.010215224597373063,
+      "ci_lo": -0.054427299342351715,
+      "ci_hi": 0.09741855653708464,
+      "p_value": 0.7825,
+      "ci90": [
+       -0.04463433291535965,
+       0.08205855982269881
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.020224504091819473,
+      "ci_lo": -0.5791648606951567,
+      "ci_hi": 0.34416222149159664,
+      "p_value": 0.931,
+      "ci90": [
+       -0.4841563923857494,
+       0.3004192856522488
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": 0.029736624890065066,
+      "ci_lo": -0.42950945363590004,
+      "ci_hi": 0.45476178152523206,
+      "p_value": 0.882,
+      "ci90": [
+       -0.347919930401644,
+       0.39443343326869534
+      ],
+      "class": "inconclusive"
+     }
+    }
+   }
+  },
+  "clean": {
+   "sharpe": {
+    "2016-2021": {
+     "independent_ensemble": 0.3614190654972288,
+     "sequential_pipeline": 0.09342701321509841,
+     "pipeline_placebo": 0.48333980730237075,
+     "hierarchical": 0.3402238843307079,
+     "pipeline_placebo_s1": -0.03464692362085237,
+     "pipeline_placebo_s2": 0.6293542898473773
+    },
+    "2016-2018": {
+     "independent_ensemble": 0.834555804623003,
+     "sequential_pipeline": 0.38543721192823077,
+     "pipeline_placebo": 0.8230012740038488,
+     "hierarchical": 0.871217891852157,
+     "pipeline_placebo_s1": 0.05156204096991055,
+     "pipeline_placebo_s2": 1.0555395069498807
+    },
+    "2019-2021": {
+     "independent_ensemble": -0.13432278224323715,
+     "sequential_pipeline": -0.21960183496498392,
+     "pipeline_placebo": 0.08993158386128468,
+     "hierarchical": -0.2141349127865513,
+     "pipeline_placebo_s1": -0.12484041521997838,
+     "pipeline_placebo_s2": 0.17410540485836695
+    },
+    "2016": {
+     "independent_ensemble": 0.5620676805680007,
+     "sequential_pipeline": 0.7017451150025962,
+     "pipeline_placebo": 0.828269341165086,
+     "hierarchical": 0.5683533497990062,
+     "pipeline_placebo_s1": 0.6893765307491608,
+     "pipeline_placebo_s2": 0.852583153896474
+    },
+    "2017": {
+     "independent_ensemble": 2.678266108027628,
+     "sequential_pipeline": 1.3737709265106621,
+     "pipeline_placebo": 2.4411020771385514,
+     "hierarchical": 2.6962010060194452,
+     "pipeline_placebo_s1": -0.12108937749643285,
+     "pipeline_placebo_s2": 3.144772691247701
+    },
+    "2018": {
+     "independent_ensemble": -0.08371244501714153,
+     "sequential_pipeline": -0.44694448743307763,
+     "pipeline_placebo": -0.24749000041521146,
+     "hierarchical": -0.10366509690162032,
+     "pipeline_placebo_s1": -0.35596813145457906,
+     "pipeline_placebo_s2": -0.16334721260789803
+    },
+    "2019": {
+     "independent_ensemble": -1.8767609178275688,
+     "sequential_pipeline": -2.363893707584932,
+     "pipeline_placebo": -1.6612152768079,
+     "hierarchical": -2.1453806306303913,
+     "pipeline_placebo_s1": -1.8197883732529097,
+     "pipeline_placebo_s2": -1.7417982931707543
+    },
+    "2020": {
+     "independent_ensemble": 0.928576156084694,
+     "sequential_pipeline": 0.8393342809913212,
+     "pipeline_placebo": 1.5047522689414718,
+     "hierarchical": 0.9339903777740509,
+     "pipeline_placebo_s1": 0.7320259060068232,
+     "pipeline_placebo_s2": 1.9004512298455611
+    },
+    "2021": {
+     "independent_ensemble": 0.46728967439122737,
+     "sequential_pipeline": 0.7402507002210552,
+     "pipeline_placebo": 0.15398563575893248,
+     "hierarchical": 0.45143656606838894,
+     "pipeline_placebo_s1": 0.6691449950072663,
+     "pipeline_placebo_s2": 0.08888581578677313
+    }
+   },
+   "comparisons": {
+    "2016-2021": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.2679920522821304,
+      "ci_lo": -0.5220274205144881,
+      "ci_hi": -0.04898524800969978,
+      "p_value": 0.0295,
+      "ci90": [
+       -0.4796633214997801,
+       -0.0808090424371164
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": 0.12192074180514195,
+      "ci_lo": -0.16101580648684785,
+      "ci_hi": 0.38395716262907326,
+      "p_value": 0.3715,
+      "ci90": [
+       -0.11830185077415817,
+       0.34021701198570986
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.3899127940872723,
+      "ci_lo": -0.6950729140312489,
+      "ci_hi": -0.11301771465321742,
+      "p_value": 0.0095,
+      "ci90": [
+       -0.635135509328811,
+       -0.15536983845256336
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.021195181166520916,
+      "ci_lo": -0.09810775063138018,
+      "ci_hi": 0.05059031199196525,
+      "p_value": 0.572,
+      "ci90": [
+       -0.08243757489739638,
+       0.04007289627881325
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.39606598911808116,
+      "ci_lo": -0.7868432541233813,
+      "ci_hi": -0.03010647833206149,
+      "p_value": 0.038,
+      "ci90": [
+       -0.7259312423328963,
+       -0.09718491416439937
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": 0.2679352243501485,
+      "ci_lo": 0.023289008413445406,
+      "ci_hi": 0.525364882641916,
+      "p_value": 0.036,
+      "ci90": [
+       0.06050091611597415,
+       0.481184588727976
+      ],
+      "class": "improvement"
+     }
+    },
+    "2016-2018": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.4491185926947723,
+      "ci_lo": -0.8724699051498215,
+      "ci_hi": -0.08318590580590265,
+      "p_value": 0.0245,
+      "ci90": [
+       -0.8031642673183828,
+       -0.1525574198818343
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.011554530619154235,
+      "ci_lo": -0.3643446943413246,
+      "ci_hi": 0.28680016826024607,
+      "p_value": 0.945,
+      "ci90": [
+       -0.2998659788707024,
+       0.24228397662481374
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.43756406207561804,
+      "ci_lo": -0.8054018110721257,
+      "ci_hi": -0.12431085763880097,
+      "p_value": 0.0165,
+      "ci90": [
+       -0.7512557394608506,
+       -0.1642922272730782
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": 0.03666208722915398,
+      "ci_lo": -0.05578958828680242,
+      "ci_hi": 0.1425767812790133,
+      "p_value": 0.4465,
+      "ci90": [
+       -0.04357766420995824,
+       0.12087672976746287
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.7829937636530925,
+      "ci_lo": -1.4804259759518565,
+      "ci_hi": -0.19344744331367755,
+      "p_value": 0.018,
+      "ci90": [
+       -1.350247498851838,
+       -0.27455860081224576
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": 0.2209837023268777,
+      "ci_lo": -0.09979661722933672,
+      "ci_hi": 0.5428792505703561,
+      "p_value": 0.1805,
+      "ci90": [
+       -0.04778750059117901,
+       0.4906190712848362
+      ],
+      "class": "inconclusive"
+     }
+    },
+    "2019-2021": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.08527905272174677,
+      "ci_lo": -0.41498640646594115,
+      "ci_hi": 0.2279214023183238,
+      "p_value": 0.593,
+      "ci90": [
+       -0.35561869300266097,
+       0.18453479565041056
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": 0.22425436610452182,
+      "ci_lo": -0.21388273468840333,
+      "ci_hi": 0.6593738415789944,
+      "p_value": 0.2965,
+      "ci90": [
+       -0.13297789833592863,
+       0.5864566047722473
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.3095334188262686,
+      "ci_lo": -0.8116707171265001,
+      "ci_hi": 0.15466100948336514,
+      "p_value": 0.1895,
+      "ci90": [
+       -0.7009236918757414,
+       0.08537905567212337
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.07981213054331415,
+      "ci_lo": -0.2025416472645452,
+      "ci_hi": 0.02589247597989185,
+      "p_value": 0.1545,
+      "ci90": [
+       -0.18064171932659467,
+       0.009649221809711894
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": 0.009482367023258775,
+      "ci_lo": -0.3639620151399148,
+      "ci_hi": 0.3708745945075979,
+      "p_value": 0.9615,
+      "ci90": [
+       -0.3133497447315073,
+       0.3054516533823283
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": 0.30842818710160413,
+      "ci_lo": -0.065500340456605,
+      "ci_hi": 0.6716445969097666,
+      "p_value": 0.1065,
+      "ci90": [
+       -0.013907276404566555,
+       0.6184399741837049
+      ],
+      "class": "inconclusive"
+     }
+    },
+    "2016": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": 0.13967743443459546,
+      "ci_lo": -0.33014889752405285,
+      "ci_hi": 0.5848082503735,
+      "p_value": 0.559,
+      "ci90": [
+       -0.2632361809817107,
+       0.5091840201421445
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": 0.2662016605970853,
+      "ci_lo": -0.4008949896039842,
+      "ci_hi": 0.8238620994179668,
+      "p_value": 0.3795,
+      "ci90": [
+       -0.26541407852015986,
+       0.7465077818966857
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.12652422616248982,
+      "ci_lo": -0.5626241365846234,
+      "ci_hi": 0.2892794631794769,
+      "p_value": 0.556,
+      "ci90": [
+       -0.4887481842295158,
+       0.21748187888699635
+      ],
+      "class": "inconclusive"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": 0.006285669231005486,
+      "ci_lo": -0.13287047336159244,
+      "ci_hi": 0.13734653276137218,
+      "p_value": 0.917,
+      "ci90": [
+       -0.10770915388735162,
+       0.11047964510428726
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": 0.12730885018116012,
+      "ci_lo": -0.56681400240013,
+      "ci_hi": 0.7176861586583291,
+      "p_value": 0.706,
+      "ci90": [
+       -0.4577189014159138,
+       0.6340464756680079
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": 0.2905154733284733,
+      "ci_lo": -0.42444166086340307,
+      "ci_hi": 0.909223519159429,
+      "p_value": 0.3815,
+      "ci90": [
+       -0.31384847157876716,
+       0.8119552374534754
+      ],
+      "class": "inconclusive"
+     }
+    },
+    "2017": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -1.3044951815169659,
+      "ci_lo": -2.0410798012859876,
+      "ci_hi": -0.5842115677239149,
+      "p_value": 0.0015,
+      "ci90": [
+       -1.911526240124483,
+       -0.6952773912468811
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.23716403088907656,
+      "ci_lo": -0.967249248366401,
+      "ci_hi": 0.4371825611371489,
+      "p_value": 0.5265,
+      "ci90": [
+       -0.8626589366722064,
+       0.3354807003699082
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -1.0673311506278893,
+      "ci_lo": -1.9126483270506265,
+      "ci_hi": -0.21796916415777054,
+      "p_value": 0.015,
+      "ci90": [
+       -1.7545027208514077,
+       -0.34264437904432926
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": 0.017934897991817245,
+      "ci_lo": -0.22755841789444028,
+      "ci_hi": 0.2376156253265354,
+      "p_value": 0.8925,
+      "ci90": [
+       -0.18803791523558241,
+       0.20958661311796356
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -2.7993554855240608,
+      "ci_lo": -4.168044487347024,
+      "ci_hi": -1.5181104878567653,
+      "p_value": 0.0,
+      "ci90": [
+       -3.96507505604842,
+       -1.6809614224721432
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": 0.466506583220073,
+      "ci_lo": -0.2347584184400657,
+      "ci_hi": 1.1979223070283196,
+      "p_value": 0.2125,
+      "ci90": [
+       -0.10870117280556717,
+       1.1061726683365596
+      ],
+      "class": "inconclusive"
+     }
+    },
+    "2018": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.3632320424159361,
+      "ci_lo": -0.9436223349887622,
+      "ci_hi": 0.05130672753060132,
+      "p_value": 0.166,
+      "ci90": [
+       -0.8510168173506891,
+       -0.004059979774038957
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.16377755539806993,
+      "ci_lo": -0.7466687434219288,
+      "ci_hi": 0.22782379271006728,
+      "p_value": 0.497,
+      "ci90": [
+       -0.6070266171069845,
+       0.1834408656213136
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.19945448701786617,
+      "ci_lo": -0.611487202725641,
+      "ci_hi": 0.08640896572850236,
+      "p_value": 0.252,
+      "ci90": [
+       -0.5389097131596213,
+       0.04550180057835963
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.019952651884478784,
+      "ci_lo": -0.16372727784759725,
+      "ci_hi": 0.12607900810543285,
+      "p_value": 0.7415,
+      "ci90": [
+       -0.13707576644729141,
+       0.10016867898514371
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.2722556864374375,
+      "ci_lo": -0.820497584365874,
+      "ci_hi": 0.18422008055116648,
+      "p_value": 0.3055,
+      "ci90": [
+       -0.7397307825728391,
+       0.11818523628268278
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": -0.0796347675907565,
+      "ci_lo": -0.5635454798796935,
+      "ci_hi": 0.3298581765521152,
+      "p_value": 0.7075,
+      "ci90": [
+       -0.503100332745698,
+       0.25193770219502265
+      ],
+      "class": "inconclusive"
+     }
+    },
+    "2019": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.4871327897573632,
+      "ci_lo": -1.1092390474039375,
+      "ci_hi": 0.089907910088361,
+      "p_value": 0.112,
+      "ci90": [
+       -1.0106695264494792,
+       0.013649274538868404
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": 0.21554564101966878,
+      "ci_lo": -0.43181964994600686,
+      "ci_hi": 0.9199135284379768,
+      "p_value": 0.5125,
+      "ci90": [
+       -0.31694078541952414,
+       0.782237260605222
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.702678430777032,
+      "ci_lo": -1.6517745754712998,
+      "ci_hi": 0.17554451730232237,
+      "p_value": 0.1115,
+      "ci90": [
+       -1.465366659430783,
+       0.016302854208326938
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.2686197128028225,
+      "ci_lo": -0.5926421452659921,
+      "ci_hi": 0.006162992079542402,
+      "p_value": 0.0745,
+      "ci90": [
+       -0.530685884214587,
+       -0.019525042946004673
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": 0.05697254457465917,
+      "ci_lo": -0.5574425620392032,
+      "ci_hi": 0.6079167238050367,
+      "p_value": 0.8325,
+      "ci90": [
+       -0.46344345112949975,
+       0.5026653088521652
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": 0.13496262465681452,
+      "ci_lo": -0.23025286131023742,
+      "ci_hi": 0.4735834861356124,
+      "p_value": 0.4415,
+      "ci90": [
+       -0.16445243236789772,
+       0.4263945940660927
+      ],
+      "class": "inconclusive"
+     }
+    },
+    "2020": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": -0.08924187509337278,
+      "ci_lo": -0.41838000476088305,
+      "ci_hi": 0.32929898588964174,
+      "p_value": 0.6475,
+      "ci90": [
+       -0.3805986361782024,
+       0.24254333754153462
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": 0.5761761128567778,
+      "ci_lo": -0.16164040615635025,
+      "ci_hi": 1.3415749313962417,
+      "p_value": 0.1235,
+      "ci90": [
+       -0.02310725618323137,
+       1.2029125294179577
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": -0.6654179879501506,
+      "ci_lo": -1.4696994126805698,
+      "ci_hi": 0.04845561164054312,
+      "p_value": 0.078,
+      "ci90": [
+       -1.3078149377585382,
+       -0.08002657667009802
+      ],
+      "class": "meaningful gain excluded"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": 0.005414221689356902,
+      "ci_lo": -0.10713706134420034,
+      "ci_hi": 0.1677004175649865,
+      "p_value": 0.941,
+      "ci90": [
+       -0.09271308732153381,
+       0.13665690144271195
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": -0.19655025007787086,
+      "ci_lo": -0.9439434244221857,
+      "ci_hi": 0.3426091570874935,
+      "p_value": 0.533,
+      "ci90": [
+       -0.8258572903749611,
+       0.2612071699729483
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": 0.9718750737608671,
+      "ci_lo": 0.37049692535795975,
+      "ci_hi": 1.555971400215907,
+      "p_value": 0.004,
+      "ci90": [
+       0.4776911627366535,
+       1.4612484369154892
+      ],
+      "class": "improvement"
+     }
+    },
+    "2021": {
+     "sequential_pipeline:independent_ensemble": {
+      "diff": 0.27296102582982784,
+      "ci_lo": -0.39032734590416035,
+      "ci_hi": 0.9033250023543313,
+      "p_value": 0.403,
+      "ci90": [
+       -0.2859297681472116,
+       0.7953390132689607
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo:independent_ensemble": {
+      "diff": -0.3133040386322949,
+      "ci_lo": -0.9842817407687072,
+      "ci_hi": 0.26618970990575663,
+      "p_value": 0.3145,
+      "ci90": [
+       -0.8483626074092678,
+       0.18496711136875169
+      ],
+      "class": "inconclusive"
+     },
+     "sequential_pipeline:pipeline_placebo": {
+      "diff": 0.5862650644621228,
+      "ci_lo": 0.015473794701925753,
+      "ci_hi": 1.0954932542571552,
+      "p_value": 0.036,
+      "ci90": [
+       0.09326567248684889,
+       1.005473784065998
+      ],
+      "class": "improvement"
+     },
+     "hierarchical:independent_ensemble": {
+      "diff": -0.015853108322838427,
+      "ci_lo": -0.11520108009564327,
+      "ci_hi": 0.0770887863245275,
+      "p_value": 0.745,
+      "ci90": [
+       -0.09721670544503333,
+       0.06018460921754659
+      ],
+      "class": "practically equivalent"
+     },
+     "pipeline_placebo_s1:independent_ensemble": {
+      "diff": 0.20185532061603895,
+      "ci_lo": -0.5735158947323372,
+      "ci_hi": 0.9239740320319447,
+      "p_value": 0.611,
+      "ci90": [
+       -0.4334920293806586,
+       0.80954795876958
+      ],
+      "class": "inconclusive"
+     },
+     "pipeline_placebo_s2:independent_ensemble": {
+      "diff": -0.37840385860445425,
+      "ci_lo": -0.924837307776249,
+      "ci_hi": 0.19126643012980765,
+      "p_value": 0.1755,
+      "ci90": [
+       -0.8296800156035804,
+       0.11287894235330698
+      ],
+      "class": "meaningful gain excluded"
+     }
+    }
+   }
+  }
+ }
+}
