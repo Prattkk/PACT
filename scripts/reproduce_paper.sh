@@ -1,16 +1,25 @@
 #!/bin/bash
-# Regenerate every number and table in the paper from the released LLM responses (no API calls).
-# Requires FRED_API_KEY and EIA_API_KEY in .env for the point-in-time data fetchers (or the
-# released input-data snapshot in data/cache/store and data/cache/gdelt_days), and the two frozen
-# price snapshots used by the runs: PX_B (2022-2024 cells) and PX_C (2016-2021 cells), one
-# <SYMBOL>.csv per ticker. Their SHA-256 hashes are in docs/run_manifest.json. A fresh Yahoo
-# download does not reproduce the prompts (adjusted closes are revised after each dividend).
+# Regenerate every number and table in the paper from the released LLM responses (no API calls,
+# no network). Inputs:
+#   PX_B, PX_C  the two frozen price snapshots used by the runs (2022-2024 and 2016-2021 cells), one
+#               <SYMBOL>.csv per ticker; their SHA-256 hashes are in docs/run_manifest.json. Yahoo
+#               prices are not redistributed, and a fresh download does not reproduce the prompts
+#               (adjusted closes are revised after each dividend).
+#   release/input_data_snapshot.tar.gz  point-in-time macro/news/alt inputs (extracted below; per-folder
+#               hashes in docs/run_manifest.json).
+# No FRED/EIA/GDELT/Anthropic keys are needed on this path. Tested with Python 3.13.
+# Runtime on 2 cores: about 2.5 core-hours for the 119 cells and 4.5 for the analyses
+# (validate_bootstrap alone is about 1 h; set SKIP_SLOW=1 to use its archived output).
+# Run from the head of branch paper-fixes: the paper's numbers come from that commit's code.
 set -e
 : "${PX_B:?set PX_B to the 2022-2024 price snapshot directory}"
 : "${PX_C:?set PX_C to the 2016-2021 price snapshot directory}"
 export PACT_PX_DIR="$PX_B"
 cd "$(dirname "$0")/.."
-tar xzf release/confirmatory_llm_cache.tar.gz          # -> data/cache/llm/{claude-sonnet-5-5,claude-haiku-5-5,datedgpt-instruct-scorer-v1}
+# SHA-256 of the tarball: see README. -> data/cache/llm/{claude-sonnet-5-5, claude-haiku-5-5,
+#   datedgpt-instruct-scorer-v1, datedgpt-instruct-nameonly-scorer-v1}
+tar xzf release/confirmatory_llm_cache.tar.gz
+tar xzf release/input_data_snapshot.tar.gz        # -> data/cache/gdelt_days, data/cache/store/{alfred,...}
 M="independent_ensemble sequential_pipeline pipeline_placebo hierarchical"
 cell() { python -m scripts.run_ablation_matrix --window b --regime "$1" --protocol "$2" --altdata --offline-llm; }
 for p in $M deterministic_only debate llm_plus_anchor single_agent single_agent_sc debate_multiround; do cell none $p; done
@@ -29,6 +38,9 @@ for R in frontier_r2 frontier_haiku_r2; do python -m scripts.run_sensitivity --r
 python -m scripts.run_sensitivity --regime clean --protocols $M
 python -m scripts.run_sensitivity --regime none --protocols $M debate
 python -m scripts.diagnose_clean
+python -m scripts.run_pitfall_audit         # Table 7 left (deterministic baseline, prices only)
+# Table 7 'original code' row: results/tables/pitfall_audit_prefix.json (commit cb8e79f; how to
+# reproduce is recorded in the file).
 
 # ---- pre-registration v2 analyses (docs/preregistration_v2.md) ----------------------------------
 cell clean_nameonly independent_ensemble                       # capability check C1, ensemble Sharpe
@@ -37,7 +49,7 @@ cellc() { PACT_PX_DIR="$PX_C" python -m scripts.run_ablation_matrix --window c -
 for p in deterministic_only $M pipeline_placebo_s1 pipeline_placebo_s2; do cellc none $p; done
 for p in $M pipeline_placebo_s1 pipeline_placebo_s2; do cellc clean $p --offline-llm; done
 python -m scripts.analyze_robustness       # block lengths, equivalence classes, simultaneous intervals
-python -m scripts.validate_bootstrap       # simulation check of the multi-run bootstrap (CPU, ~1 h)
+[ -n "$SKIP_SLOW" ] || python -m scripts.validate_bootstrap   # simulation check of the multi-run bootstrap (~1 h)
 python -m scripts.analyze_factorial        # communication x adjudication contrasts
 python -m scripts.analyze_placebo_seeds    # six placebo mappings, DatedGPT 2022-2024
 python -m scripts.analyze_judge_decomposition  # debate judge: resizing vs sign changes
@@ -49,7 +61,13 @@ PACT_PX_DIR="$PX_C" python -m scripts.analyze_decision_flow --window c --groups 
 PACT_PX_DIR="$PX_C" python -m scripts.analyze_disagreement --window c --groups clean
 # C1-C4 (scripts/check_datedgpt.py) need the DatedGPT weights (2021-2023 vintages) and several CPU
 # hours; their outputs are archived in results/tables/datedgpt_checks.json.
-PACT_PX_MANIFEST_DIRS="$PX_B:$PX_C" python -m scripts.build_manifest           # -> docs/run_manifest.json (cells, prompt and data hashes)
-python -m scripts.export_paper             # -> results/paper_tex/ (numbers.tex, tab_*.tex)
+# Rebuild the manifest into a separate file and compare cells (excess-return hashes, failed and
+# unparseable counts), released response counts and input hashes with docs/run_manifest.json.
+# run_ablation_matrix exits 0 even when a cell fails, so this is the check that catches it.
+PACT_PX_MANIFEST_DIRS="$PX_B:$PX_C" python -m scripts.build_manifest --out results/run_manifest_rebuilt.json
+python -m scripts.verify_reproduction results/run_manifest_rebuilt.json
+python -m scripts.export_paper             # -> results/paper_tex/ (numbers.tex, tab_*.tex; the loo.*/hfour.*
+#   keys and tab_loo/tab_altdata stay \pending: they come from exploratory pre-freeze runs that are not
+#   in the release and are not used in the paper)
 # (maintainers: python -m scripts.build_cache_release rebuilds release/confirmatory_llm_cache.tar.gz)
 python -m scripts.export_v2                # -> results/paper_tex/ (numbers_v2.tex, tab_main2/unused/cost2, fig_flow.pdf)

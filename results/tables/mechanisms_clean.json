@@ -162,63 +162,55 @@
       "input_tokens": 0,
       "output_tokens": 0,
       "cost_usd": 0.0,
-      "latency_hours": 0.0
+      "latency_hours": 0.0,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 471,
+      "cost_usd_excl_rationale": 0.0
     },
     "single_agent": {
-      "calls": 0,
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "cost_usd": 0.0,
-      "latency_hours": 0.0
+      "error": "157 calls missing from cache"
     },
     "single_agent_sc": {
-      "calls": 0,
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "cost_usd": 0.0,
-      "latency_hours": 0.0
+      "error": "785 calls missing from cache"
     },
     "sequential_pipeline": {
       "calls": 2198,
       "input_tokens": 0,
       "output_tokens": 0,
       "cost_usd": 0.0,
-      "latency_hours": 0.0
+      "latency_hours": 0.0,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 628,
+      "cost_usd_excl_rationale": 0.0
     },
     "pipeline_placebo": {
       "calls": 2198,
       "input_tokens": 0,
       "output_tokens": 0,
       "cost_usd": 0.0,
-      "latency_hours": 0.0
+      "latency_hours": 0.0,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 628,
+      "cost_usd_excl_rationale": 0.0
     },
     "hierarchical": {
       "calls": 2041,
       "input_tokens": 0,
       "output_tokens": 0,
       "cost_usd": 0.0,
-      "latency_hours": 0.0
+      "latency_hours": 0.0,
+      "rationale_calls": 1570,
+      "calls_excl_rationale": 471,
+      "cost_usd_excl_rationale": 0.0
     },
     "debate": {
-      "calls": 2041,
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "cost_usd": 0.0,
-      "latency_hours": 0.0
+      "error": "1556 calls missing from cache"
     },
     "debate_multiround": {
-      "calls": 2041,
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "cost_usd": 0.0,
-      "latency_hours": 0.0
+      "error": "4676 calls missing from cache"
     },
     "llm_plus_anchor": {
-      "calls": 2041,
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "cost_usd": 0.0,
-      "latency_hours": 0.0
+      "error": "1570 calls missing from cache"
     }
   }
 }

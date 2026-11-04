@@ -1,4 +1,4 @@
-"""How dynamic are the DatedGPT scorer's views? Reads the clean-regime cache only.
+"""How dynamic are the DatedGPT scorer's views? Reads the clean-regime cache only, 2022-2024 window.
 
 Writes results/tables/clean_diag.json: per specialist, the share of weeks in which an
 instrument's direction differs from the previous week, and the mean |average direction|
@@ -22,6 +22,8 @@ for f in glob.glob(str(REPO_ROOT / "data/cache/llm/datedgpt-instruct-scorer-v1/*
     for v in json.loads(d["response"]["text"]):
         rows.append((ag, v["instrument"], v["direction"], asof, d["prompt_hash"]))
 df = pd.DataFrame(rows, columns=["agent", "sym", "dir", "asof", "h"])
+# The cache also holds the 2016-2021 (window c) scores; this diagnostic describes window b only.
+df = df[df["asof"] >= "2022-01-01"]
 df = df[df.agent != "cross_asset_transmission"].sort_values("asof")  # cross-asset depends on protocol
 out = {}
 for ag, g in df.groupby("agent"):

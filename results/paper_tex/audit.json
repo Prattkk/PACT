@@ -1,0 +1,53 @@
+[
+  {
+    "label": "fixed",
+    "sharpe": 0.3956796569946858,
+    "mdd": -0.1551903612676,
+    "ann_return": 0.08639951222400355,
+    "rows": 753
+  },
+  {
+    "label": "level_splice",
+    "sharpe": 0.013431720506298457,
+    "mdd": -0.19255657082820876,
+    "ann_return": 0.03192380440877196,
+    "rows": 753
+  },
+  {
+    "label": "union_calendar",
+    "sharpe": 0.1452036577060932,
+    "mdd": -0.1649171769657899,
+    "ann_return": 0.04895480398262153,
+    "rows": 985
+  },
+  {
+    "label": "double_cost",
+    "sharpe": 0.1946552771603247,
+    "mdd": -0.18412648875696724,
+    "ann_return": 0.05773754231642436,
+    "rows": 753
+  },
+  {
+    "label": "rf_zero",
+    "sharpe": 0.5961495594490557,
+    "mdd": -0.18697058985734316,
+    "ann_return": 0.07305281851975698,
+    "rows": 753
+  },
+  {
+    "label": "no_warmup",
+    "sharpe": 0.2808634101862573,
+    "mdd": -0.22276887852574456,
+    "ann_return": 0.07605759808459567,
+    "rows": 753
+  },
+  {
+    "label": "prefix_code",
+    "sharpe": -0.2641,
+    "mdd": -0.284,
+    "ann_return": null,
+    "rows": 984,
+    "note": "commit cb8e79f (pre-fix engine), pandas 2.2.3, same price snapshot; all pitfalls plus same-close execution and no position drift",
+    "how_to_reproduce": "git checkout cb8e79f; install pandas==2.2.3; run the deterministic_only cell on window b with the same price snapshot; Sharpe = mean/std*sqrt(252) of the saved returns"
+  }
+]

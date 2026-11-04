@@ -7,10 +7,14 @@ from __future__ import annotations
 import glob
 import hashlib
 import json
+from pathlib import Path
 import os
 from collections import Counter, defaultdict
 
 from scripts._common import REPO_ROOT, RAW_DIR
+
+# Point-in-time inputs other than prices; released in release/input_data_snapshot.tar.gz.
+INPUT_NAMESPACES = ("alfred", "blockchain_info", "eia", "noaa", "wikipedia")
 
 PAPER_GROUPS = {
     "Sonnet 5.5 (Tables 4-7)": [f"frontier_r{k}" for k in range(2, 7)],
@@ -30,6 +34,11 @@ def sha(path: str) -> str:
 
 
 def main() -> None:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", default=str(REPO_ROOT / "docs" / "run_manifest.json"),
+                    help="output path (reproduce_paper.sh writes a separate file and compares it)")
+    args = ap.parse_args()
     cells = defaultdict(list)
     for d in sorted(os.listdir(RAW_DIR)):
         w, reg, proto = d.split("__")
@@ -46,7 +55,7 @@ def main() -> None:
         models[c.get("model", "")] += 1
         prompts[c.get("model", "").split("|")[0]].add(hashlib.sha256(c["system"].encode()).hexdigest()[:16])
     data = {}
-    for pat in ("data/cache/gdelt_days/*.json",):
+    for pat in ("data/cache/gdelt_days/*.json",) + tuple(f"data/cache/store/{ns}/*.json" for ns in INPUT_NAMESPACES):
         files = sorted(glob.glob(str(REPO_ROOT / pat)))
         h = hashlib.sha256()
         for f in files:
@@ -62,7 +71,7 @@ def main() -> None:
            "cached_responses_by_model_key": dict(sorted(models.items())),
            "system_prompt_sha256_prefixes": {k: sorted(v) for k, v in prompts.items()},
            "input_data": data}
-    (REPO_ROOT / "docs" / "run_manifest.json").write_text(json.dumps(out, indent=1))
+    Path(args.out).write_text(json.dumps(out, indent=1))
     print("cells:", sum(len(v) for v in cells.values()), "model keys:", len(models))
 
 

@@ -1278,6 +1278,26 @@
    "files": 3380,
    "sha256_concat": "a4e2231b66b0059bd6f0efb8d6ec043d02901aefcc208ea7e2d4e677cc102904"
   },
+  "data/cache/store/alfred/*.json": {
+   "files": 21,
+   "sha256_concat": "e00873016bac934a726722362cc63acd011f9fad843f9266f2e6c6b37a65211f"
+  },
+  "data/cache/store/blockchain_info/*.json": {
+   "files": 4,
+   "sha256_concat": "16e311888aa73b908b4dcca706f864db704e0f6db9b7a68ce36aa94eca27fa42"
+  },
+  "data/cache/store/eia/*.json": {
+   "files": 4,
+   "sha256_concat": "795bf71b73597f75f66b2ee2e12684956afc1268d1cbeca12ba1691954a876fd"
+  },
+  "data/cache/store/noaa/*.json": {
+   "files": 6,
+   "sha256_concat": "6daea9758c51aae524424a1467317fcf6cf9e6457b38b76ba65eb8109eddd8c1"
+  },
+  "data/cache/store/wikipedia/*.json": {
+   "files": 10,
+   "sha256_concat": "06a3bc2ed7f6d4abecd40f66db8e4ced183f6b6244f8c5d776a4ceda4ce8042c"
+  },
   "prices px (Yahoo, not redistributed)": {
    "AAPL.csv": "5b17ec068a96671d4343b9465cdd0ee2ba6bc53bf482ee0591cbee1a5c2d8e5d",
    "AMZN.csv": "4801dd062480900e199f97a79fea948fb7ca4fe2c22a931e7e87f16de9681623",
