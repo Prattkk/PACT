@@ -23,7 +23,7 @@ import backtest.engine as E
 from backtest.engine import BacktestConfig, run_backtest
 from data.universe import TRADEABLE_SYMBOLS
 from portfolio.construction import PortfolioConfig
-from scripts._common import TABLES_DIR, build_agents, build_llm_client, build_protocol, load_config
+from scripts._common import RAW_DIR, TABLES_DIR, build_agents, build_llm_client, build_protocol, load_config
 
 MATCHED = ("sequential_pipeline", "pipeline_placebo", "hierarchical")
 SPECIALISTS = ("macro_regime", "narrative_event", "fundamentals_carry")
@@ -87,6 +87,11 @@ def capture(regime: str, protocol_key: str, w: str) -> dict:
         raise RuntimeError(f"{regime}/{protocol_key}: {fails} LLM calls missing from the cache")
     rec["held"] = res.weights
     rec["ret"] = res.excess_returns
+    saved = RAW_DIR / f"{w}__{regime}__{protocol_key}" / "excess_returns.parquet"
+    if saved.exists():   # the offline replay must reproduce the reported cell
+        s = pd.read_parquet(saved).iloc[:, 0]
+        r = res.excess_returns.iloc[:, 0] if isinstance(res.excess_returns, pd.DataFrame) else res.excess_returns
+        rec["replay_max_abs_diff"] = float((r.reindex(s.index) - s).abs().max())
     return rec
 
 
@@ -116,6 +121,7 @@ def compare(e: dict, p: dict, high: pd.DataFrame) -> dict:
                       "sign_changed": float((np.sign(ha.round(6)) != np.sign(hb.round(6))).to_numpy().mean())}
     ra, rb = e["ret"].align(p["ret"], join="inner")
     out["S7_returns"] = {"corr": float(ra.corr(rb)), "ann_mean_diff": float((rb - ra).mean() * 252)}
+    out["replay_max_abs_diff"] = float(np.nanmax([e.get("replay_max_abs_diff", np.nan), p.get("replay_max_abs_diff", np.nan)]))
     # disagreement split on submitted orders (S5): order dates are one session after decisions
     a, b = pairs["S5_order"]
     a, b = a.align(b, join="inner")
@@ -166,7 +172,10 @@ def main() -> None:
 def _mean(runs: list[dict]) -> dict:
     out = {}
     for k in runs[0]:
-        out[k] = {m: float(np.mean([r[k][m] for r in runs])) for m in runs[0][k]}
+        if isinstance(runs[0][k], dict):
+            out[k] = {m: float(np.mean([r[k][m] for r in runs])) for m in runs[0][k]}
+        else:
+            out[k] = float(np.nanmax([r[k] for r in runs]))
     return out
 
 

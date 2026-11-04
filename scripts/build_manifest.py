@@ -52,9 +52,10 @@ def main() -> None:
         for f in files:
             h.update(open(f, "rb").read())
         data[pat] = {"files": len(files), "sha256_concat": h.hexdigest()}
-    px = os.environ.get("PACT_PX_DIR")
-    if px:
-        data["prices (Yahoo, not redistributed)"] = {os.path.basename(f): sha(f) for f in sorted(glob.glob(px + "/*.csv"))}
+    # PACT_PX_MANIFEST_DIRS: os.pathsep-separated price snapshot directories (one per evaluation window)
+    for px in filter(None, os.environ.get("PACT_PX_MANIFEST_DIRS", os.environ.get("PACT_PX_DIR", "")).split(os.pathsep)):
+        data[f"prices {os.path.basename(px.rstrip('/'))} (Yahoo, not redistributed)"] = {
+            os.path.basename(f): sha(f) for f in sorted(glob.glob(px + "/*.csv"))}
     out = {"protocol_freeze_commit": "3cf1f67",
            "paper_groups": PAPER_GROUPS,
            "cells": cells,
