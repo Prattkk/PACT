@@ -3,18 +3,18 @@
  "R": 5,
  "rho": 0.98,
  "run_sd": 0.05,
- "reps": 500,
+ "reps": 1000,
  "n_boot": 1000,
  "delta_0.00": {
   "coverage_95": 0.996,
-  "reject_5pct": 0.006,
-  "mean_estimate": -0.0024158753803286757,
-  "mean_ci_width": 0.34630724771023963
+  "reject_5pct": 0.005,
+  "mean_estimate": -0.0007035862513439097,
+  "mean_ci_width": 0.34775607047397283
  },
  "delta_0.20": {
-  "coverage_95": 0.99,
-  "reject_5pct": 0.696,
-  "mean_estimate": 0.20682912855274604,
-  "mean_ci_width": 0.35089752565599897
+  "coverage_95": 0.989,
+  "reject_5pct": 0.645,
+  "mean_estimate": 0.19793834005108998,
+  "mean_ci_width": 0.3443751033931478
  }
 }

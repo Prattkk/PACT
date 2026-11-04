@@ -17,6 +17,7 @@ annualised Sharpe ratios toward zero.)
 
 from __future__ import annotations
 
+import os
 from datetime import date, timedelta
 
 import pandas as pd
@@ -35,7 +36,24 @@ CRYPTO_SYMBOLS = frozenset({"BTC"})
 RISK_FREE_TICKER = "^IRX"  # 13-week US T-bill, annualised discount yield in percent
 
 
+def _snapshot_download(px_dir: str, symbol: str, start: date, end: date) -> pd.DataFrame:
+    """Read a frozen price snapshot (one <SYMBOL>.csv per ticker, yfinance columns), end-exclusive.
+
+    Yahoo revises dividend-adjusted closes after every new distribution, so a fresh download
+    does not reproduce the prompts of the reported runs; the paper's runs used the snapshots
+    whose SHA-256 hashes are listed in docs/run_manifest.json.
+    """
+    path = os.path.join(px_dir, symbol.replace("^", "") + ".csv")
+    df = pd.read_csv(path, index_col=0, parse_dates=True)
+    df.index = pd.to_datetime(df.index).tz_localize(None).normalize()
+    s, e = pd.Timestamp(start), pd.Timestamp(end)
+    return df[(df.index >= s) & (df.index < e)].copy()
+
+
 def _cached_yf_download(symbol: str, start: date, end: date) -> pd.DataFrame:
+    px_dir = os.environ.get("PACT_PX_DIR")
+    if px_dir:
+        return _snapshot_download(px_dir, symbol, start, end)
     params = {"symbol": symbol, "start": start.isoformat(), "end": end.isoformat()}
     hit = cache_read(NAMESPACE, params)
     if hit is not None:
