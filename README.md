@@ -117,6 +117,14 @@ python scripts/reproduce_tradingagents.py
 pytest -q
 ```
 
+## Reproducing the PAKDD 2027 paper
+
+`bash scripts/reproduce_paper.sh` regenerates every number and table in the paper
+offline from `release/confirmatory_llm_cache.tar.gz`, which holds every Claude
+response of the reported runs (Sonnet 5.5 runs r2-r6, Haiku 5.5 runs r2-r11 and the
+masked run anon1, all generated after the protocol freeze at commit 3cf1f67) and the
+DatedGPT scores. Exploratory pre-freeze responses are not included and are not used.
+
 ## Reproducibility (spec §8)
 
 - All LLM responses cached as JSON keyed by SHA-256 of the canonicalized
