@@ -52,6 +52,10 @@ python -m scripts.analyze_robustness       # block lengths, equivalence classes,
 [ -n "$SKIP_SLOW" ] || python -m scripts.validate_bootstrap   # simulation check of the multi-run bootstrap (~1 h)
 python -m scripts.analyze_factorial        # communication x adjudication contrasts
 python -m scripts.analyze_placebo_seeds    # six placebo mappings, DatedGPT 2022-2024
+# ---- pre-registration v3 (docs/preregistration_v3.md) --------------------------------------------
+for p in ctrl_isolated_vote ctrl_isolated_judge ctrl_shared_vote ctrl_shared_judge; do cell clean $p; done  # 2x2, DatedGPT
+python -m scripts.analyze_controlled --regime clean   # contrasts D-B, B-A, C-A, interaction; offline replay
+[ -n "$SKIP_SLOW" ] || python -m scripts.calibrate_bootstrap   # I/E/X error rates, 5 and 10 runs (~2 h)
 python -m scripts.analyze_judge_decomposition  # debate judge: resizing vs sign changes
 python -m scripts.analyze_decision_flow --window b
 python -m scripts.analyze_decision_flow --window b --protocols debate --tag _debate --groups sonnet haiku
