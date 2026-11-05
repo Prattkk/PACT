@@ -43,14 +43,24 @@ def key(s):
     return s.replace("_", "").replace(" ", "")
 
 
-def cell(diff, lo, hi, cls=None, npos=None, runs=None):
+def mark(cls, sim_lo=None):
+    """Class superscript. Improvement is I_u (unadjusted) unless the simultaneous interval also
+    excludes zero; the paper never reports an I that survives multiplicity correction as plain I
+    without that check."""
+    c = CLS.get(cls, cls)
+    if c == "I" and not (sim_lo is not None and sim_lo > 0):
+        return r"$^{\mathrm{I_u}}$"
+    return r"$^{\mathrm{" + c + "}}$"
+
+
+def cell(diff, lo, hi, cls=None, npos=None, runs=None, sim_lo=None):
     if diff is None:
         return "--"
     head = num(diff)
     if runs and runs > 1:
         head += r" {\tiny(" + f"{round(npos * runs) if npos <= 1 else npos}/{runs}" + ")}"
     if cls:
-        head += r"$^{\mathrm{" + CLS[cls] + "}}$"
+        head += mark(cls, sim_lo)
     return r"\makecell{" + head + r"\\ {\tiny$[" + f"{lo:+.2f},\\,{hi:+.2f}".replace("+", "") + "]$}}"
 
 
@@ -68,7 +78,7 @@ def main() -> None:
     # ---- main table: matched comparisons and adjudication contrasts --------------------------
     rob, fac = J("robustness"), J("factorial_b")
     cols = ("sonnet", "haiku", "clean", "haikuanon")
-    rows = [("sequential_pipeline", "independent_ensemble", r"C$-$A: pipeline vs ensemble"),
+    rows = [("sequential_pipeline", "independent_ensemble", "Pipeline vs ensemble"),
             ("pipeline_placebo", "independent_ensemble", "Placebo vs ensemble (added voter)"),
             ("sequential_pipeline", "pipeline_placebo", "Pipeline vs placebo (communication)"),
             ("hierarchical", "independent_ensemble", "Conviction gate vs ensemble")]
@@ -82,7 +92,8 @@ def main() -> None:
                 if not r:
                     cells.append("--")
                     continue
-                cells.append(cell(r["b21"]["diff"], r["b21"]["ci_lo"], r["b21"]["ci_hi"], r["class"]))
+                cells.append(cell(r["b21"]["diff"], r["b21"]["ci_lo"], r["b21"]["ci_hi"], r["class"],
+                                  sim_lo=r["ci_simultaneous"][0]))
                 k = f"rob.{g}.{key(x)}.{key(y)}"
                 N[k + ".cls"] = r["class"]
                 N[k + ".lo90"], N[k + ".hi90"] = num(r["ci90"][0]), num(r["ci90"][1])
@@ -104,18 +115,21 @@ def main() -> None:
             N[k + ".simlo"], N[k + ".simhi"] = num(r["ci_simultaneous"][0]), num(r["ci_simultaneous"][1])
     if fac:
         lines.append(r"\midrule")
-        for name, lab in (("B-A (judge, no communication)", r"B$-$A: debate judge vs ensemble"),
-                          ("D-B (communication, judge)", r"D$-$B: exchange before judge$^\dagger$"),
-                          ("interaction (D-B)-(C-A)", r"Interaction (D$-$B)$-$(C$-$A)$^\dagger$")):
-            cells = []
-            for g in cols:
-                r = fac["groups"].get(g, {}).get(name)
-                cells.append(cell(r["diff"], *r["ci"], r["class"], r["share_positive"], r["n_runs"]) if r else "--")
+        name = "B-A (judge, no communication)"
+        cells = []
+        for g in cols:
+            r = fac["groups"].get(g, {}).get(name)
+            rr = rob["b"].get(f"{g}:debate:independent_ensemble") if rob else None
+            cells.append(cell(r["diff"], *r["ci"], r["class"], r["share_positive"], r["n_runs"],
+                              sim_lo=rr["ci_simultaneous"][0] if rr else None) if r else "--")
+        lines.append("Debate judge vs ensemble" + " & " + " & ".join(cells) + r" \\")
+        for g in cols:   # keys still used in the text
+            for nm in ("B-A (judge, no communication)", "D-B (communication, judge)"):
+                r = fac["groups"].get(g, {}).get(nm)
                 if r:
-                    k = f"fac.{g}.{key(name.split(' ')[0])}"
+                    k = f"fac.{g}.{key(nm.split(' ')[0])}"
                     N[k + ".diff"], N[k + ".lo"], N[k + ".hi"] = num(r["diff"]), num(r["ci"][0]), num(r["ci"][1])
                     N[k + ".cls"], N[k + ".runs"] = r["class"], str(r["n_runs"])
-            lines.append(lab + " & " + " & ".join(cells) + r" \\")
     if lines:
         (out / "tab_main2.tex").write_text("\n".join(lines) + "\n")
 
@@ -347,6 +361,68 @@ def main() -> None:
         mk = json.loads(man.read_text())["cached_responses_by_model_key"]
         for fam in ("sonnet", "haiku"):
             N[f"calls.{fam}"] = f"{sum(n for k, n in mk.items() if k.startswith(f'claude-{fam}') and '|run=' in k):,}"
+
+    # ---- controlled 2x2 (pre-registration v3) ----------------------------------------------------
+    ct = J("controlled_clean")
+    if ct:
+        c21 = ct["contrasts"]["block21"]
+        labels = {"D-B": r"D$-$B: communication, judge fixed", "B-A": r"B$-$A: judge vs vote, isolated",
+                  "C-A": r"C$-$A: communication, vote fixed", "interaction": r"(D$-$B)$-$(C$-$A)"}
+        rows = []
+        for name, lab in labels.items():
+            r = c21[name]
+            stable = len({ct["contrasts"][f"block{b}"][name]["cls"] for b in (5, 21, 63)}) == 1
+            sim = (r"$[" + f"{r['simlo']:+.2f},\\,{r['simhi']:+.2f}".replace("+", "") + "]$") if "simlo" in r else "--"
+            rows.append(f"{lab} & {num(r['diff'])}{mark(r['cls'], r.get('simlo'))} & "
+                        + r"$[" + f"{r['lo']:+.2f},\\,{r['hi']:+.2f}".replace("+", "") + "]$"
+                        + f" & {sim} & {'yes' if stable else 'no'}" + r" \\")
+            k = f"ctrl.{key(name).replace('-', '')}"
+            N[k + ".diff"], N[k + ".lo"], N[k + ".hi"], N[k + ".cls"] = num(r["diff"]), num(r["lo"]), num(r["hi"]), r["cls"]
+            N[k + ".lo90"], N[k + ".hi90"] = num(r["lo90"]), num(r["hi90"])
+        (out / "tab_ctrl.tex").write_text("\n".join(rows) + "\n")
+        for c, v in ct["contrasts"]["sharpe"].items():
+            N[f"ctrl.sr.{c}"] = num(v)
+        m = ct.get("mechanisms")
+        if m:
+            N["ctrl.revchg.iso"] = pct(m["revision_changes_direction_isolated"], 1)
+            N["ctrl.revchg.shared"] = pct(m["revision_changes_direction_shared"], 1)
+            N["ctrl.revdiff"] = pct(m["revised_direction_differs_shared_vs_isolated"], 1)
+            for kk, v in m["final_direction_differs"].items():
+                N[f"ctrl.finaldiff.{kk.replace('-', '')}"] = pct(v, 1)
+            N["ctrl.identical"] = "yes" if (m["identical_revisions_A_B"] and m["identical_revisions_C_D"]
+                                            and m["identical_first_pass"]) else "no"
+            N["ctrl.replay"] = f"{max(m['replay_max_abs_diff'].values()):.1e}"
+
+    # ---- bootstrap calibration (pre-registration v3) ---------------------------------------------
+    cb = J("bootstrap_calibration")
+    if cb:
+        rows = []
+        for R in (5, 10):
+            if R == 10 and rows:
+                rows.append(r"\midrule")
+            for d in (0.0, 0.10, 0.20, -0.20):
+                g = cb.get(f"R{R}_delta{d:+.2f}")
+                if not g:
+                    continue
+                a, c = g["prereg_b21"], g["corrected_b21"]
+                rows.append(f"{R} & ${d:+.2f}$ & {pct(a['coverage95'], 1)} & {pct(a['rate_I'], 1)} & {pct(a['rate_E'], 1)} & "
+                            f"{pct(a['rate_X'], 1)} & {a['se_ratio']:.2f} & {pct(c['coverage95'], 1)} & {c['se_ratio']:.2f}" + r" \\")
+                for est, e in (("pre", a), ("cor", c)):
+                    kk = f"cal.R{R}.d{int(round(d * 100)):+d}.{est}"
+                    N[kk + ".cov"], N[kk + ".I"] = pct(e["coverage95"], 1), pct(e["rate_I"], 1)
+                    N[kk + ".E"], N[kk + ".X"], N[kk + ".ser"] = pct(e["rate_E"], 1), pct(e["rate_X"], 1), f"{e['se_ratio']:.2f}"
+                for b in (5, 63):
+                    N[f"cal.R{R}.d{int(round(d * 100)):+d}.pre.cov.b{b}"] = pct(g[f"prereg_b{b}"]["coverage95"], 1)
+        (out / "tab_calib.tex").write_text("\n".join(rows) + "\n")
+        for R in (5, 10):
+            for est, v in cb.get(f"family4_R{R}", {}).items():
+                N[f"cal.fam.R{R}.{est[:3]}.ind"] = pct(v["familywise_coverage_individual95"], 1)
+                N[f"cal.fam.R{R}.{est[:3]}.bon"] = pct(v["familywise_coverage_bonferroni9875"], 1)
+        N["cal.reps"], N["cal.nboot"] = f"{cb['design']['reps']:,}", f"{cb['design']['n_boot']:,}"
+        for kk, e in cb.get("exploratory_single_run", {}).items():
+            d = int(round(e["true"] * 100))
+            for f, v in (("cov", e["coverage95"]), ("I", e["rate_I"]), ("E", e["rate_E"]), ("X", e["rate_X"])):
+                N[f"cal.R1.d{d:+d}.{f}"] = pct(v, 1)
 
     (out / "numbers_v2.tex").write_text("".join(f"\\pactdef{{{k}}}{{{v}}}\n" for k, v in sorted(N.items())))
     print(f"{len(N)} numbers; files in {out}")

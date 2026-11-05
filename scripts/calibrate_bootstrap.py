@@ -83,9 +83,9 @@ def estimate(A, b, block, n_boot, seed):
     q = np.nanquantile(draws, [0.025, 0.975, 0.05, 0.95, 0.00625, 0.99375])
     p = float(np.mean(np.abs(draws - np.nanmean(draws)) >= abs(obs)))
     R = A.shape[0]
-    v_runs = diffs.var(ddof=1) / R
+    v_runs = diffs.var(ddof=1) / R if R > 1 else 0.0
     v_avg, v_each = D.mean(1).var(ddof=1), D.var(0, ddof=1).mean()
-    v_corr = v_runs + max(0.0, (R * v_avg - v_each) / (R - 1))
+    v_corr = v_avg if R == 1 else v_runs + max(0.0, (R * v_avg - v_each) / (R - 1))
     sd_c = np.sqrt(v_corr)
     z95, z90 = norm.ppf(0.975), norm.ppf(0.95)
     pre = {"obs": obs, "lo95": q[0], "hi95": q[1], "lo90": q[2], "hi90": q[3], "lo9875": q[4], "hi9875": q[5],
@@ -158,6 +158,28 @@ def _selfcheck():
     assert abs(ref["p_value"] - pre["p"]) < 1e-12
 
 
+def single_run(reps: int = 1000, n_boot: int = 1000) -> dict:
+    """Exploratory (not in pre-registration v3): one deterministic run (no sampling variance), as for
+    the DatedGPT cells; the multi-run bootstrap then reduces to a plain day-block bootstrap."""
+    import scripts.calibrate_bootstrap as m
+    keep, m.RUN_SD = m.RUN_SD, 0.0
+    try:
+        out = {}
+        for j, d in enumerate((0.0, 0.20)):
+            rng = np.random.default_rng(4242 + j)
+            rows = []
+            for _ in range(reps):
+                A, b, _ = simulate(rng, d, 1)
+                pre, _ = estimate(A, b, 21, n_boot, int(rng.integers(1 << 30)))
+                rows.append({"block": 21, "est": "prereg", "obs": pre["obs"], "sd": pre["sd"],
+                             "cover95": pre["lo95"] <= d <= pre["hi95"], "reject": pre["lo95"] > 0 or pre["hi95"] < 0,
+                             "cls": decide(pre["obs"], pre["lo95"], pre["hi95"], pre["lo90"], pre["hi90"])})
+            out[f"R1_delta{d:+.2f}"] = summarise(rows, d)["prereg_b21"]
+        return out
+    finally:
+        m.RUN_SD = keep
+
+
 def main() -> None:
     reps = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
     n_boot = int(sys.argv[2]) if len(sys.argv) > 2 else 1000
@@ -187,6 +209,7 @@ def main() -> None:
                                       "any_false_rejection": float(g["any_I_or_neg"].mean())}
                                 for est, g in df.groupby("est")}
         print("family", R, res[f"family4_R{R}"], flush=True)
+    res["exploratory_single_run"] = single_run(reps, n_boot)
     (TABLES_DIR / "bootstrap_calibration.json").write_text(json.dumps(res, indent=1, default=float))
 
 
