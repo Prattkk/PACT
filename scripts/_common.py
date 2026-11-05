@@ -50,7 +50,8 @@ def load_config(name: str) -> dict:
 
 
 # Protocols that need their own llm_client kwarg (separate from the agents' LLM).
-_PROTOCOLS_NEEDING_LLM = {"single_agent", "single_agent_sc", "debate", "debate_multiround", "llm_plus_anchor"}
+_PROTOCOLS_NEEDING_LLM = {"single_agent", "single_agent_sc", "debate", "debate_multiround", "llm_plus_anchor",
+                          "ctrl_isolated_vote", "ctrl_isolated_judge", "ctrl_shared_vote", "ctrl_shared_judge"}
 
 
 def build_agents(

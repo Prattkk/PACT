@@ -1,4 +1,5 @@
 from coordination.base import CoordinationProtocol, CoordinationResult
+from coordination.controlled import CONTROLLED
 from coordination.debate import DebateProtocol, MultiRoundDebateProtocol
 from coordination.deterministic_only import DeterministicOnlyProtocol
 from coordination.hierarchical import HierarchicalProtocol
@@ -19,6 +20,7 @@ REGISTRY = {
     "deterministic_only": DeterministicOnlyProtocol,
     "llm_plus_anchor": LLMPlusAnchorProtocol,
     **SEEDED_PLACEBOS,          # diagnostic placebos with random derangements (pre-registration v2)
+    **CONTROLLED,               # controlled communication x adjudication 2x2 (pre-registration v3)
 }
 
 __all__ = [
