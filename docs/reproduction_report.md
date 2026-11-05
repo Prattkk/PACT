@@ -52,3 +52,13 @@ PX_B=<2022-2024 snapshot> PX_C=<2016-2021 snapshot> SKIP_SLOW=1 bash scripts/rep
 
 The last step prints `119/119 reference cells present; 0 problems`; `results/paper_tex/` then
 holds every number and table in the paper. About 7 CPU-hours on 2 cores.
+
+## Addendum: controlled experiment (added after the reproduction above)
+
+The four DatedGPT cells of the controlled 2x2 (`b__clean__ctrl_*`, pre-registration v3) and the
+calibration study were run after this reproduction, at commit f595b6c. They are checked by an
+offline replay from the released responses (`scripts.analyze_controlled`: 0 cache misses, max
+abs difference from the saved excess returns 0.0 in all four cells; A/B and C/D revised views
+identical). They have not yet been reproduced from a fresh clone by someone other than the
+implementer. The release cache now includes their 1,727 `scorer-v2-fp32` responses
+(SHA-256 `7a5dd700...708c3d8f`), and `docs/run_manifest.json` lists 123 cells.

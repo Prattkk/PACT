@@ -392,6 +392,11 @@ def main() -> None:
             N["ctrl.identical"] = "yes" if (m["identical_revisions_A_B"] and m["identical_revisions_C_D"]
                                             and m["identical_first_pass"]) else "no"
             N["ctrl.replay"] = f"{max(m['replay_max_abs_diff'].values()):.1e}"
+            if "follows_unanimous" in m:                     # descriptive judge diagnostics
+                N["ctrl.unan"] = pct(m["unanimous_share"], 0)
+                for c in "ABCD":
+                    N[f"ctrl.follow.{c}"] = pct(m["follows_unanimous"][c], 0)
+                    N[f"ctrl.net.{c}"] = f"{m['mean_abs_net_calls'][c]:.1f}"
 
     # ---- bootstrap calibration (pre-registration v3) ---------------------------------------------
     cb = J("bootstrap_calibration")

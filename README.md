@@ -124,7 +124,7 @@ every number and table in the paper offline (no API keys, no network) from two r
 
 | File | Contents | SHA-256 |
 |---|---|---|
-| `release/confirmatory_llm_cache.tar.gz` | every Claude response of the reported runs (Sonnet 5.5 r2-r6: 22,133; Haiku 5.5 r2-r11 and masked anon1: 48,170; all after the protocol freeze at 3cf1f67) and the DatedGPT scores (3,918 + 471 name-only) | `a431e59f15aa5cdc2e8cb904cbe32aa33c96722992add2836a5672f3e54c93cd` |
+| `release/confirmatory_llm_cache.tar.gz` | every Claude response of the reported runs (Sonnet 5.5 r2-r6: 22,133; Haiku 5.5 r2-r11 and masked anon1: 48,170; all after the protocol freeze at 3cf1f67) and the DatedGPT scores (3,918 frozen-protocol + 471 name-only + 1,727 controlled-experiment `scorer-v2-fp32`) | `7a5dd7000af70bdcd3e9c34c10ebdfdac2a3a42e27e506995cd4da31708c3d8f` |
 | `release/input_data_snapshot.tar.gz` | point-in-time inputs other than prices: GDELT daily counts, first-release FRED/ALFRED vintages, EIA stocks, NOAA degree days, Wikimedia pageviews, blockchain.com charts | per-folder hashes in `docs/run_manifest.json` |
 
 Run it from the head of branch `paper-fixes`; the paper's numbers come from that commit's code

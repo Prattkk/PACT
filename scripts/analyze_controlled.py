@@ -106,6 +106,13 @@ def replay(regime: str, key: str, w: str) -> dict:
     return rec
 
 
+def _unanimous(revised: dict, sym: str):
+    """Common direction when at least two specialists hold a non-neutral revised view on `sym`
+    and all of them agree; otherwise None."""
+    dirs = [v[sym][0] for v in revised.values() if sym in v and v[sym][0] != 0]
+    return dirs[0] if len(dirs) >= 2 and len(set(dirs)) == 1 else None
+
+
 def mechanisms(regime: str, w: str) -> dict:
     R = {k: replay(regime, c, w) for k, c in CELLS.items()}
     dates = sorted(R["A"]["final"])
@@ -129,6 +136,14 @@ def mechanisms(regime: str, w: str) -> dict:
             lambda d, s: np.mean([R["C"]["revised"][d][n][s][0] != R["A"]["revised"][d][n][s][0] for n in revised_specs])),
         "final_direction_differs": {f"{x}-{y}": share(lambda d, s, x=x, y=y: R[x]["final"][d][s] != R[y]["final"][d][s])
                                     for x, y in (("C", "A"), ("B", "A"), ("D", "B"), ("D", "C"))},
+        # judge diagnostics (added after the cells ran; descriptive, not pre-registered): does the
+        # aggregator follow the specialists when every non-neutral revised view agrees, and how
+        # balanced are its long and short calls across instruments in a week?
+        "unanimous_share": share(lambda d, s: _unanimous(R["A"]["revised"][d], s) is not None),
+        "follows_unanimous": {k: share(lambda d, s, k=k: None if _unanimous(R[k]["revised"][d], s) is None
+                                       else float(R[k]["final"][d][s] == _unanimous(R[k]["revised"][d], s)))
+                              for k in R},
+        "mean_abs_net_calls": {k: float(np.mean([abs(sum(R[k]["final"][d].values())) for d in dates])) for k in R},
         "replay_max_abs_diff": {k: R[k]["replay_max_abs_diff"] for k in R},
         "unparseable_or_failed": {k: {s: v for s, v in R[k]["llm_stats"].items()
                                       if s.endswith(("unparseable", "call_failed"))} for k in R},
