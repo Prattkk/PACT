@@ -106,7 +106,9 @@ def _fetch_btc_spliced(start: date, end: date) -> pd.DataFrame:
     if start < splice:
         parts.append(_cached_yf_download("BTC-USD", start, min(end, splice)))
     if end > splice:
-        ibit = _cached_yf_download("IBIT", max(start, splice), end)
+        # Always read IBIT from the splice date (the rescaling needs its close there) and trim to the
+        # window afterwards; a window starting after the splice used to raise instead.
+        ibit = _cached_yf_download("IBIT", splice, end)
         if not ibit.empty:
             anchor = _cached_yf_download("BTC-USD", splice, splice + timedelta(days=1))
             splice_ts = pd.Timestamp(splice)
@@ -120,7 +122,7 @@ def _fetch_btc_spliced(start: date, end: date) -> pd.DataFrame:
                 if col in ibit.columns and col in anchor.columns:
                     scale = float(anchor[col].iloc[0]) / float(ibit.loc[splice_ts, col])
                     ibit[col] = ibit[col] * scale
-            parts.append(ibit)
+            parts.append(ibit[ibit.index >= pd.Timestamp(start)])
     if not parts:
         return pd.DataFrame()
     out = pd.concat(parts).sort_index()

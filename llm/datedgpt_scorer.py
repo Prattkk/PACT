@@ -80,7 +80,13 @@ class DatedGPTScorer(LLMClient):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
-        self._loaded = None   # one model in memory at a time
+        self._loaded = None   # one model in memory at a time: release the previous one first
+        import ctypes, gc
+        gc.collect()
+        try:
+            ctypes.CDLL("libc.so.6").malloc_trim(0)
+        except OSError:
+            pass
         repo = REPO.format(y=vintage)
         rev = self.revisions.get(vintage)
         log.info("loading %s@%s fp32=%s", repo, rev, fp32)
