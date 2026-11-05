@@ -131,7 +131,7 @@ Run it from the head of branch `paper-fixes`; the paper's numbers come from that
 (for example, capability check C2 passes only if both of its parts pass). Tested with CPython 3.13 (pandas 2.2.3,
 numpy 2.2, scipy 1.18, pyarrow 26, statsmodels 0.15, arch 8, yfinance 1.7); `pip install -e .`
 installs everything, and scikit-learn, google-cloud-bigquery, vectorbt, openai, seaborn and
-tabulate are not imported on the offline path. Runtime on 2 cores is about 2.5 core-hours for the 119 cells and 4.5 for the
+tabulate are not imported on the offline path. Runtime on 2 cores is about 2.5 core-hours for the 123 cells and 4.5 for the
 analyses; `SKIP_SLOW=1` skips the 1-hour bootstrap simulation and keeps its archived output.
 
 The script rebuilds the run manifest into `results/run_manifest_rebuilt.json` and
@@ -139,8 +139,10 @@ The script rebuilds the run manifest into `results/run_manifest_rebuilt.json` an
 excess-return values (SHA-256 of dates and values rounded to 1e-10, so a different pandas or
 pyarrow version that writes different parquet bytes still passes), failed-call and unparseable-reply counts, the released response counts and
 the input hashes. It exits non-zero on any difference (the cell runner itself exits 0 when a cell
-fails, so this is the check to rely on). An independent rerun from a fresh clone reproduced all
-119 cells exactly and every regenerated number the paper uses.
+fails, so this is the check to rely on). An independent rerun from a fresh clone reproduced the
+119 frozen-protocol cells exactly and every regenerated number the paper used at that point; a
+second rerun reproduced the four controlled cells and `controlled_clean.json` exactly
+(`docs/reproduction_report.md`). The calibration simulation has not been independently rerun.
 
 Exploratory responses generated before the protocol freeze (Opus, untagged Sonnet and Haiku
 samples) are not released and no number in the paper uses them. `export_paper` still has slots

@@ -59,6 +59,12 @@ The four DatedGPT cells of the controlled 2x2 (`b__clean__ctrl_*`, pre-registrat
 calibration study were run after this reproduction, at commit f595b6c. They are checked by an
 offline replay from the released responses (`scripts.analyze_controlled`: 0 cache misses, max
 abs difference from the saved excess returns 0.0 in all four cells; A/B and C/D revised views
-identical). They have not yet been reproduced from a fresh clone by someone other than the
-implementer. The release cache now includes their 1,727 `scorer-v2-fp32` responses
+identical). A second automated agent, given only the fresh clone at b39c519, the release
+files and the 2022-2024 price snapshot (torch not installed, network blocked), reran the four
+cells and `analyze_controlled`: excess returns and weights max abs diff 0.0, `llm_stats`
+identical, 0 failed or unparseable calls, all 128 values of `controlled_clean.json` identical;
+input and response-count hashes matched the manifest. Differences: commit hash in metadata
+(cells ran at f595b6c; later commits change only analysis scripts) and parquet bytes under
+pandas 3.0.5 (values identical). The verifier cannot be restricted to a subset of cells, so a
+partial rerun reports the other 119 as missing. The calibration simulation was not rerun. The release cache now includes their 1,727 `scorer-v2-fp32` responses
 (SHA-256 `7a5dd700...708c3d8f`), and `docs/run_manifest.json` lists 123 cells.
