@@ -85,10 +85,11 @@ class DatedGPTScorer(LLMClient):
         rev = self.revisions.get(vintage)
         log.info("loading %s@%s fp32=%s", repo, rev, fp32)
         tok = AutoTokenizer.from_pretrained(repo, revision=rev)
-        model = AutoModelForCausalLM.from_pretrained(repo, revision=rev, dtype=torch.bfloat16,
+        # Weights are stored in bfloat16, so loading them as float32 is exact (the same values as a
+        # cast) and avoids holding both copies in memory.
+        model = AutoModelForCausalLM.from_pretrained(repo, revision=rev,
+                                                     dtype=torch.float32 if fp32 else torch.bfloat16,
                                                      low_cpu_mem_usage=True).eval()
-        if fp32:
-            model = model.float()
         self._loaded = ((vintage, fp32), tok, model)
         return tok, model
 
