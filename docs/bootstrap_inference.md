@@ -23,19 +23,25 @@ centred draws at least as far from their mean as the observed `D`.
 ## Double counting
 
 Write each run's difference as `d_r = mu + u_r + e_r`, with `u_r` the run (LLM-sampling) effect
-and `e_r` the day-level estimation noise of that run's Sharpe difference. `Var(D) =
-Var(u)/R + Var(mean_r e_r)`. Resampling runs (step i) reproduces the spread of the `d_r`,
-which already contains `Var(u) + Var(e)` — that is, day noise is already in the between-run
-spread. Step (ii) then adds day-level noise again through the common day blocks. Because the
-`e_r` are highly correlated across runs (same market path; protocol-return correlation about
-0.98 in our runs), `Var(mean_r e_r)` is close to `Var(e)`, and adding it on top of a run spread
-that already contains it inflates the variance. In the calibration (`scripts/calibrate_bootstrap.py`,
+and `e_r` the day-level estimation noise of that run's Sharpe difference. Then
+`Var(D) = Var(u)/R + Var(mean_r e_r)`. In the simulated process (and plausibly in our runs) the
+`e_r` are largely independent across runs: each run's protocol returns carry their own
+idiosyncratic noise relative to the comparator (the 0.98 is the correlation between `a_r` and
+`b`, not between the `e_r` of different runs; with RUN_SD = 0, the cross-run correlation of `e_r`
+over 400 simulated panels is about -0.08). So `Var(mean_r e_r) ~ Var(e)/R`, and the true
+`Var(D) ~ (Var(u) + Var(e))/R`.
+
+Resampling runs (step i) reproduces the spread of the `d_r`, i.e. `(Var(u) + Var(e))/R`, which
+already contains the day-level noise. Step (ii) then adds day-level noise again through the
+common day blocks, roughly another `Var(e)/R`, so the bootstrap variance is close to
+`(Var(u) + 2 Var(e))/R`. In the calibration (`scripts/calibrate_bootstrap.py`,
 `results/tables/bootstrap_calibration.json`) the bootstrap standard error is 1.30-1.55 times
 the true sampling SD of `D`, and 95% intervals cover in 98.4-99.7% of 1,000 simulated panels
 per design.
 
 The diagnostic moment-corrected variance in the same script, `Var(runs)/R + max(0, (R*v_avg -
-v_each)/(R-1))`, removes the double counting; its SE ratio is 0.85-1.00 but its normal
+v_each)/(R-1))`, keeps the run spread and adds back only the cross-run covariance of the
+day-block draws, which removes the double counting; its SE ratio is 0.85-1.00 but its normal
 intervals cover in only 85-93%, so it is reported, not used.
 
 ## Status
