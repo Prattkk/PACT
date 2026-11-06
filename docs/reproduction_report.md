@@ -1,12 +1,22 @@
-# Independent reproduction record
+# Automated reproduction record
 
 ## Who and how
 
 - **Reproducer.** A separate automated agent (Claude) that had not written or run any of the
   code. It was given only the repository URL and branch, the README procedure and the two price
-  snapshots; it had no access to the implementation session. This is independent of the
-  implementation but is not a human reproduction; a co-author who did not implement the system
-  should repeat it before publication (procedure below).
+  snapshots; it had no access to the implementation session. It is separate from the
+  implementation session but is not a human reproduction; a co-author who did not implement the system
+  should repeat it before publication (procedure below). It is a reproduction check (do the
+  released code and responses regenerate the reported numbers?), not an independent
+  reimplementation, and it does not establish that the implementation is correct.
+- **Clean environment; write access.** It was instructed to work only in its own fresh clone and
+  environment and not to change implementation code (it ran in the same container as the
+  repository, so this was an instruction, not an access control). The fixes listed under "Discrepancies" were made by the
+  implementer in the repository (commits given), not by the reproducer.
+- **What was compared.** Per-cell excess returns, weights, equity, turnover and `llm_stats`
+  against `results/raw`; every value in `numbers.tex` and `numbers_v2.tex`; the 25 result
+  tables; model keys, response counts, prompt, price and input hashes against
+  `docs/run_manifest.json`; and every reference in `docs/public_code_audit.md`.
 - **Environment.** Fresh clone of branch `paper-fixes` at 857d7e5; CPython 3.13.16, pandas
   2.2.3, numpy 2.2.6, pyarrow 26; 2 CPU cores; offline, with a socket guard that logged and
   refused every outbound connection (its log stayed empty). No paid model calls.
@@ -66,5 +76,5 @@ identical, 0 failed or unparseable calls, all 128 values of `controlled_clean.js
 input and response-count hashes matched the manifest. Differences: commit hash in metadata
 (cells ran at f595b6c; later commits change only analysis scripts) and parquet bytes under
 pandas 3.0.5 (values identical). The verifier cannot be restricted to a subset of cells, so a
-partial rerun reports the other 119 as missing. The calibration simulation was not rerun. The release cache now includes their 1,727 `scorer-v2-fp32` responses
+partial rerun reports the other 119 as missing. The second agent was given the same instruction and made no code changes (`git status` of its clone is clean). The calibration simulation was not rerun. The release cache now includes their 1,727 `scorer-v2-fp32` responses
 (SHA-256 `7a5dd700...708c3d8f`), and `docs/run_manifest.json` lists 123 cells.

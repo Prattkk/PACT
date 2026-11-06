@@ -139,7 +139,7 @@ The script rebuilds the run manifest into `results/run_manifest_rebuilt.json` an
 excess-return values (SHA-256 of dates and values rounded to 1e-10, so a different pandas or
 pyarrow version that writes different parquet bytes still passes), failed-call and unparseable-reply counts, the released response counts and
 the input hashes. It exits non-zero on any difference (the cell runner itself exits 0 when a cell
-fails, so this is the check to rely on). An independent rerun from a fresh clone reproduced the
+fails, so this is the check to rely on). An automated rerun (a separate Claude agent) from a fresh clone reproduced the
 119 frozen-protocol cells exactly and every regenerated number the paper used at that point; a
 second rerun reproduced the four controlled cells and `controlled_clean.json` exactly
 (`docs/reproduction_report.md`). The calibration simulation has not been independently rerun.

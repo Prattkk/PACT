@@ -290,9 +290,9 @@ def main() -> None:
                 N[f"un.{r}.lvl.{key(p)}"] = num(v)
 
     # ---- secondary protocols: Sharpe, gain over ensemble and cost excluding rationale ----------
-    sec = [("independent_ensemble", "A: ensemble (vote)"), ("sequential_pipeline", "C: pipeline (vote)"),
-           ("hierarchical", "Conviction gate"), ("debate", "B: debate, 1 round (judge)"),
-           ("debate_multiround", "D: debate, 2 rounds"), ("llm_plus_anchor", "LLM + anchor"),
+    sec = [("independent_ensemble", "Ensemble (vote)"), ("sequential_pipeline", "Pipeline (vote)"),
+           ("hierarchical", "Conviction gate"), ("debate", "Debate, 1 round (judge)"),
+           ("debate_multiround", "Debate, 2 rounds"), ("llm_plus_anchor", "LLM + anchor"),
            ("single_agent", "Single-LLM monolith"), ("single_agent_sc", "Monolith, 5 samples")]
     ms = {g: J(f"mechanisms_{r}") for g, r in (("sonnet", "frontier_r2"), ("haiku", "frontier_haiku_r2"))}
     gen = J("results") or {}
@@ -334,6 +334,13 @@ def main() -> None:
         (out / "tab_cost2.tex").write_text("\n".join(L) + "\n")
         u = ms["sonnet"]["compute"]["independent_ensemble"]
         N["cost.ratshare"] = pct(u["rationale_calls"] / u["calls"])
+    for g, r in (("sonnet", "frontier_r2"), ("haiku", "frontier_haiku_r2"), ("clean", "clean")):
+        sj = J(f"sensitivity_{r}")                   # bitcoin held at zero weight (run 2), vs ensemble
+        if sj and "no_btc" in sj:
+            nb = sj["no_btc"]
+            for p, v in nb.items():
+                if p != "independent_ensemble":
+                    N[f"nobtc.{g}.{key(p)}.diff"] = num(v - nb["independent_ensemble"])
 
     # ---- placebo mappings, DatedGPT 2022-2024 (cyclic shift + five random derangements) ---------
     ps = J("placebo_seeds_b")
