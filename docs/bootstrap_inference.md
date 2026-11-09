@@ -50,8 +50,7 @@ These properties are established only for the simulated data-generating process 
 volatility, AR(1) means, protocol correlation 0.98, run-level spread 0.05, T = 753). They are
 not a general guarantee. Pre-registration fixed the procedure before the confirmatory runs; it
 records that the procedure was chosen in advance, it does not validate it. We keep it because
-switching after seeing results would be an undisclosed analytic choice, and in the simulated
-process its errors fall on the conservative side (fewer false improvements and false
+in the simulated process its errors fall on the conservative side (fewer false improvements and false
 equivalences than nominal, at the cost of power).
 
 For a single deterministic run (the DatedGPT cells and the controlled experiment) step (i) is
