@@ -8,7 +8,7 @@
 #   release/input_data_snapshot.tar.gz  point-in-time macro/news/alt inputs (extracted below; per-folder
 #               hashes in docs/run_manifest.json).
 # No FRED/EIA/GDELT/Anthropic keys are needed on this path. Tested with Python 3.13.
-# Runtime on 2 cores: about 2.5 core-hours for the 119 cells and 4.5 for the analyses
+# Runtime on 2 cores: about 2.5 core-hours for the 123 cells and 4.5 for the analyses
 # (validate_bootstrap alone is about 1 h; set SKIP_SLOW=1 to use its archived output).
 # Run from the head of branch paper-fixes: the paper's numbers come from that commit's code.
 set -e
